@@ -1,0 +1,98 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Products</h1>
+
+  <div class="flex flex-col md:flex-row gap-8">
+    <aside class="w-full md:w-1/4 lg:w-1/5">
+      <h2 class="text-xl font-semibold mb-4">Filters</h2>
+      <div class="space-y-4">
+        <div>
+          <h3 class="font-medium mb-2">Category</h3>
+          <ul class="space-y-1 text-sm text-gray-600">
+            <li><a href="#" class="hover:text-orange-500">Electronics</a></li>
+            <li><a href="#" class="hover:text-orange-500">Clothing</a></li>
+            <li><a href="#" class="hover:text-orange-500">Home & Garden</a></li>
+            <li><a href="#" class="hover:text-orange-500">Books</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="font-medium mb-2">Price Range</h3>
+          <p class="text-sm text-gray-500">(Price filter UI here)</p>
+        </div>
+        <div>
+          <h3 class="font-medium mb-2">Brand</h3>
+          <ul class="space-y-1 text-sm text-gray-600">
+            <li>
+              <input type="checkbox" id="brand1" class="mr-2" /><label
+                for="brand1"
+                >Brand A</label
+              >
+            </li>
+            <li>
+              <input type="checkbox" id="brand2" class="mr-2" /><label
+                for="brand2"
+                >Brand B</label
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+
+    <main class="w-full md:w-3/4 lg:w-4/5">
+      <div class="flex justify-end mb-4">
+        <select class="border rounded p-1 text-sm">
+          <option>Default Sorting</option>
+          <option>Sort by Price: Low to High</option>
+          <option>Sort by Price: High to Low</option>
+          <option>Sort by Newest</option>
+        </select>
+      </div>
+
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      >
+        <div
+          *ngFor="let product of products"
+          class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 bg-white flex flex-col"
+        >
+          <div
+            class="w-full h-48 bg-gray-200 flex items-center justify-center flex-shrink-0"
+          >
+            <span class="text-gray-500">Image</span>
+          </div>
+          <div class="p-4 flex flex-col flex-grow">
+            <p class="text-xs text-gray-500 mb-1">{{ product.category }}</p>
+            <h3
+              class="text-base font-semibold text-gray-800 mb-2 flex-grow min-h-[40px] hover:text-orange-600 cursor-pointer"
+              [title]="product.name"
+            >
+              {{ product.name }}
+            </h3>
+            <div class="mt-auto">
+              <p class="text-lg font-bold text-orange-600 mb-1">
+                ${{ product.price }}
+              </p>
+              <p class="text-xs text-gray-500 mb-2">
+                {{
+                  product.stock_quantity > 0
+                    ? product.stock_quantity + " in stock"
+                    : "Out of stock"
+                }}
+              </p>
+              <button
+                class="w-full mt-2 py-1 px-2 border border-orange-500 text-orange-500 rounded hover:bg-orange-500 hover:text-white transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="product.stock_quantity <= 0"
+              >
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 flex justify-center">
+        <span class="text-sm text-gray-500">(Pagination UI here)</span>
+      </div>
+    </main>
+  </div>
+</div>

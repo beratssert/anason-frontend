@@ -13,6 +13,7 @@ const routes: Routes = [
       import('./features/public/public.module').then((m) => m.PublicModule),
   },
   { path: '', redirectTo: '/public', pathMatch: 'full' },
+  { path: 'products', loadChildren: () => import('./features/product/product.module').then(m => m.ProductModule) },
 ];
 
 @NgModule({
