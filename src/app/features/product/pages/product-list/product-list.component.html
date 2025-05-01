@@ -1,45 +1,78 @@
 <div class="container mx-auto px-4 py-8">
   <h1 class="text-3xl font-bold text-gray-800 mb-6">Products</h1>
 
-  <div class="flex flex-col md:flex-row gap-8">
+  <div *ngIf="isLoading" class="text-center py-10 text-gray-500">
+    Loading products and filters...
+  </div>
+
+  <div *ngIf="!isLoading" class="flex flex-col md:flex-row gap-8">
     <aside class="w-full md:w-1/4 lg:w-1/5">
       <h2 class="text-xl font-semibold mb-4">Filters</h2>
-      <div class="space-y-4">
+      <div class="space-y-6">
         <div>
           <h3 class="font-medium mb-2">Category</h3>
-          <ul class="space-y-1 text-sm text-gray-600">
-            <li><a href="#" class="hover:text-orange-500">Electronics</a></li>
-            <li><a href="#" class="hover:text-orange-500">Clothing</a></li>
-            <li><a href="#" class="hover:text-orange-500">Home & Garden</a></li>
-            <li><a href="#" class="hover:text-orange-500">Books</a></li>
+          <ul class="space-y-1 text-sm">
+            <li>
+              <a
+                href="javascript:void(0)"
+                (click)="selectCategory(null)"
+                class="hover:text-orange-500"
+                [class.text-orange-600]="selectedCategory === null"
+                [class.font-semibold]="selectedCategory === null"
+              >
+                All Categories
+              </a>
+            </li>
+            <li *ngFor="let category of filterOptions.categories">
+              <a
+                href="javascript:void(0)"
+                (click)="selectCategory(category)"
+                class="hover:text-orange-500"
+                [class.text-orange-600]="selectedCategory === category"
+                [class.font-semibold]="selectedCategory === category"
+              >
+                {{ category }}
+              </a>
+            </li>
           </ul>
         </div>
+
         <div>
           <h3 class="font-medium mb-2">Price Range</h3>
-          <p class="text-sm text-gray-500">(Price filter UI here)</p>
-        </div>
-        <div>
-          <h3 class="font-medium mb-2">Brand</h3>
-          <ul class="space-y-1 text-sm text-gray-600">
-            <li>
-              <input type="checkbox" id="brand1" class="mr-2" /><label
-                for="brand1"
-                >Brand A</label
-              >
-            </li>
-            <li>
-              <input type="checkbox" id="brand2" class="mr-2" /><label
-                for="brand2"
-                >Brand B</label
-              >
-            </li>
-          </ul>
+          <div class="flex items-center gap-2 text-sm">
+            <input
+              type="number"
+              placeholder="Min"
+              class="w-1/2 border rounded p-1"
+              [min]="filterOptions.priceRange.min"
+              [max]="currentMaxPrice"
+              [(ngModel)]="currentMinPrice"
+              (change)="onPriceChange()"
+            />
+            <span>-</span>
+            <input
+              type="number"
+              placeholder="Max"
+              class="w-1/2 border rounded p-1"
+              [min]="currentMinPrice"
+              [max]="filterOptions.priceRange.max"
+              [(ngModel)]="currentMaxPrice"
+              (change)="onPriceChange()"
+            />
+          </div>
+          <p class="text-xs text-gray-500 mt-1">
+            Min: ${{ filterOptions.priceRange.min | number : "1.2-2" }}, Max:
+            ${{ filterOptions.priceRange.max | number : "1.2-2" }}
+          </p>
         </div>
       </div>
     </aside>
 
     <main class="w-full md:w-3/4 lg:w-4/5">
-      <div class="flex justify-end mb-4">
+      <div class="flex justify-between items-center mb-4">
+        <span class="text-sm text-gray-600"
+          >{{ filteredProducts.length }} products found</span
+        >
         <select class="border rounded p-1 text-sm">
           <option>Default Sorting</option>
           <option>Sort by Price: Low to High</option>
@@ -47,39 +80,48 @@
           <option>Sort by Newest</option>
         </select>
       </div>
-
       <div
+        *ngIf="filteredProducts.length > 0; else noProductsFound"
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
       >
         <div
-          *ngFor="let product of products"
+          *ngFor="let product of filteredProducts"
           class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 bg-white flex flex-col"
         >
-          <div
-            class="w-full h-48 bg-gray-200 flex items-center justify-center flex-shrink-0"
-          >
-            <span class="text-gray-500">Image</span>
-          </div>
-          <div class="p-4 flex flex-col flex-grow">
-            <p class="text-xs text-gray-500 mb-1">{{ product.category }}</p>
-            <h3
-              class="text-base font-semibold text-gray-800 mb-2 flex-grow min-h-[40px] hover:text-orange-600 cursor-pointer"
-              [title]="product.name"
+          <a [routerLink]="['./', product.id]" class="cursor-pointer group">
+            <div
+              class="w-full h-48 bg-gray-200 flex items-center justify-center flex-shrink-0 group-hover:opacity-80 transition-opacity"
             >
-              {{ product.name }}
-            </h3>
+              <img
+                *ngIf="product.image_url"
+                [src]="product.image_url"
+                [alt]="product.name"
+                class="w-full h-full object-contain"
+              />
+              <span *ngIf="!product.image_url" class="text-gray-500"
+                >Image</span
+              >
+            </div>
+            <div class="p-4">
+              <p class="text-xs text-gray-500 mb-1">{{ product.category }}</p>
+              <h3
+                class="text-base font-semibold text-gray-800 mb-2 min-h-[40px] group-hover:text-orange-600"
+                [title]="product.name"
+              >
+                {{ product.name }}
+              </h3>
+            </div>
+          </a>
+          <div class="p-4 pt-0 flex flex-col flex-grow">
             <div class="mt-auto">
               <p class="text-lg font-bold text-orange-600 mb-1">
-                ${{ product.price }}
+                ${{ product.price | number : "1.2-2" }}
               </p>
               <p class="text-xs text-gray-500 mb-2">
-                {{
-                  product.stock_quantity > 0
-                    ? product.stock_quantity + " in stock"
-                    : "Out of stock"
-                }}
+                Stock: {{ product.stock_quantity }}
               </p>
               <button
+                type="button"
                 class="w-full mt-2 py-1 px-2 border border-orange-500 text-orange-500 rounded hover:bg-orange-500 hover:text-white transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 [disabled]="product.stock_quantity <= 0"
               >
@@ -89,6 +131,11 @@
           </div>
         </div>
       </div>
+      <ng-template #noProductsFound>
+        <div class="text-center py-10 text-gray-500">
+          No products found matching your criteria.
+        </div>
+      </ng-template>
 
       <div class="mt-8 flex justify-center">
         <span class="text-sm text-gray-500">(Pagination UI here)</span>

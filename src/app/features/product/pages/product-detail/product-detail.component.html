@@ -1,0 +1,272 @@
+<div *ngIf="isLoading" class="text-center py-10 text-gray-500">
+  Loading product details...
+</div>
+<div *ngIf="!isLoading && !product" class="text-center py-10 text-red-500">
+  Product not found or failed to load.
+</div>
+
+<div *ngIf="!isLoading && product" class="container mx-auto px-4 py-8">
+  <div class="flex flex-col lg:flex-row gap-8">
+    <div class="w-full lg:w-1/2">
+      <div
+        class="mb-4 border rounded-lg overflow-hidden bg-gray-100 aspect-square flex items-center justify-center"
+      >
+        <img
+          *ngIf="product.image_url"
+          [src]="product.image_url"
+          [alt]="product.name"
+          class="w-full h-full object-contain"
+        />
+        <span *ngIf="!product.image_url" class="text-gray-400 text-xl"
+          >No Image</span
+        >
+      </div>
+      <div class="flex space-x-2">
+        <div
+          class="w-16 h-16 border rounded bg-gray-100 flex items-center justify-center text-xs text-gray-400 cursor-pointer hover:border-orange-500"
+        >
+          Thumb 1
+        </div>
+        <div
+          class="w-16 h-16 border rounded bg-gray-100 flex items-center justify-center text-xs text-gray-400 cursor-pointer hover:border-orange-500"
+        >
+          Thumb 2
+        </div>
+        <div
+          class="w-16 h-16 border rounded bg-gray-100 flex items-center justify-center text-xs text-gray-400 cursor-pointer hover:border-orange-500"
+        >
+          Thumb 3
+        </div>
+      </div>
+    </div>
+
+    <div class="w-full lg:w-1/2">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ product.name }}</h1>
+      <div class="text-sm text-gray-500 mb-4">
+        <span
+          >Category:
+          <a
+            routerLink="/products"
+            [queryParams]="{ category: product.category }"
+            class="text-orange-600 hover:underline"
+            >{{ product.category }}</a
+          ></span
+        >
+        <span class="mx-2">|</span>
+        <span
+          >Seller:
+          <a
+            routerLink="/seller"
+            [queryParams]="{ id: product.seller_id }"
+            class="text-orange-600 hover:underline"
+            >Seller ID {{ product.seller_id }}</a
+          ></span
+        >
+      </div>
+      <p class="text-4xl font-light text-orange-600 mb-4">
+        ${{ product.price | number : "1.2-2" }}
+      </p>
+      <p
+        class="text-sm mb-4 font-medium"
+        [ngClass]="{
+          'text-green-600': product.stock_quantity > 0,
+          'text-red-600': product.stock_quantity <= 0
+        }"
+      >
+        {{
+          product.stock_quantity > 0
+            ? product.stock_quantity + " items in stock"
+            : "Currently out of stock"
+        }}
+      </p>
+
+      <div class="mb-6" *ngIf="attributes && attributes.length > 0">
+        <h3 class="text-md font-semibold mb-2 text-gray-700">Specifications</h3>
+        <ul class="text-sm space-y-1 text-gray-600 list-disc list-inside">
+          <li *ngFor="let attr of attributes">
+            <span class="font-medium">{{ attr.name }}:</span> {{ attr.value }}
+          </li>
+        </ul>
+      </div>
+      <div class="flex items-center gap-4 mb-6">
+        <div class="flex items-center border rounded">
+          <button
+            type="button"
+            class="px-3 py-1 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            (click)="decrementQuantity()"
+            [disabled]="quantity <= 1"
+          >
+            -
+          </button>
+          <span
+            class="px-4 py-1 border-l border-r min-w-[40px] text-center font-medium"
+            >{{ quantity }}</span
+          >
+          <button
+            type="button"
+            class="px-3 py-1 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            (click)="incrementQuantity()"
+            [disabled]="quantity >= product.stock_quantity"
+          >
+            +
+          </button>
+        </div>
+        <button
+          type="button"
+          class="flex-grow py-2 px-6 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-75 disabled:opacity-50"
+          [disabled]="product.stock_quantity <= 0"
+          (click)="addToCart()"
+        >
+          Add to Cart
+        </button>
+      </div>
+
+      <div class="mb-6">
+        <h3 class="text-md font-semibold mb-2 text-gray-700">Description</h3>
+        <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+          {{ product.description }}
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="mt-12 pt-8 border-t">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Customer Reviews</h2>
+
+    <div class="mb-8 p-4 border rounded-lg bg-gray-50">
+      <h3 class="font-semibold mb-3 text-lg">Write Your Review</h3>
+      <form
+        [formGroup]="reviewForm"
+        (ngSubmit)="onReviewSubmit()"
+        class="space-y-4"
+      >
+        <div>
+          <label
+            for="rating"
+            class="block text-sm font-medium text-gray-700 mb-1"
+            >Your Rating</label
+          >
+          <select
+            id="rating"
+            formControlName="rating"
+            required
+            class="block w-full max-w-xs border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
+            [ngClass]="{
+              'border-red-500':
+                reviewForm.get('rating')?.invalid &&
+                reviewForm.get('rating')?.touched
+            }"
+          >
+            <option [ngValue]="null" disabled>Select a rating</option>
+            <option [ngValue]="5">5 Stars - Excellent</option>
+            <option [ngValue]="4">4 Stars - Good</option>
+            <option [ngValue]="3">3 Stars - Average</option>
+            <option [ngValue]="2">2 Stars - Fair</option>
+            <option [ngValue]="1">1 Star - Poor</option>
+          </select>
+          <div
+            *ngIf="
+              reviewForm.get('rating')?.invalid &&
+              reviewForm.get('rating')?.touched
+            "
+            class="mt-1 text-xs text-red-600"
+          >
+            Rating is required.
+          </div>
+        </div>
+        <div>
+          <label
+            for="comment"
+            class="block text-sm font-medium text-gray-700 mb-1"
+            >Your Comment</label
+          >
+          <textarea
+            id="comment"
+            formControlName="comment"
+            rows="4"
+            required
+            placeholder="Share your thoughts about the product..."
+            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+            [ngClass]="{
+              'border-red-500':
+                reviewForm.get('comment')?.invalid &&
+                reviewForm.get('comment')?.touched
+            }"
+          ></textarea>
+          <div
+            *ngIf="
+              reviewForm.get('comment')?.invalid &&
+              reviewForm.get('comment')?.touched
+            "
+            class="mt-1 text-xs text-red-600"
+          >
+            Comment is required.
+          </div>
+        </div>
+        <div>
+          <button
+            type="submit"
+            [disabled]="reviewForm.invalid || isSubmittingReview"
+            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+          >
+            {{ isSubmittingReview ? "Submitting..." : "Submit Review" }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="space-y-6">
+      <h3 class="font-semibold text-lg">
+        Existing Reviews ({{ reviews.length }})
+      </h3>
+
+      <div *ngIf="reviews && reviews.length > 0; else noReviews">
+        <div *ngFor="let review of reviews" class="border-b pb-4">
+          <div class="flex items-center mb-1">
+            <span class="font-semibold mr-2">{{
+              review.username || "User " + review.user_id
+            }}</span>
+            <span
+              class="text-yellow-500 flex items-center"
+              [title]="review.rating + ' stars'"
+            >
+              <ng-container *ngFor="let i of [1, 2, 3, 4, 5]">
+                <svg
+                  *ngIf="i <= review.rating"
+                  class="h-4 w-4 fill-current"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"
+                  />
+                </svg>
+                <svg
+                  *ngIf="i > review.rating"
+                  class="h-4 w-4 fill-current text-gray-300"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"
+                  />
+                </svg>
+              </ng-container>
+            </span>
+          </div>
+          <p class="text-sm text-gray-800 my-1 whitespace-pre-wrap">
+            {{ review.comment }}
+          </p>
+          <p class="text-xs text-gray-400 mt-1">
+            {{ review.created_at | date : "medium" }}
+          </p>
+        </div>
+      </div>
+
+      <ng-template #noReviews>
+        <p class="text-sm text-gray-500 py-4">
+          Be the first to review this product!
+        </p>
+      </ng-template>
+    </div>
+  </div>
+</div>
