@@ -2,8 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
-import { Observable, of, forkJoin } from 'rxjs'; // forkJoin eklendi/teyit edildi
-import { switchMap, catchError, tap } from 'rxjs/operators';
+import { CartService } from '../../../../core/services/cart.service';
+import { ToastrService } from 'ngx-toastr'; // ToastrService import edildi
+import { Observable, of, forkJoin } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-product-detail',
@@ -14,7 +16,7 @@ import { switchMap, catchError, tap } from 'rxjs/operators';
 export class ProductDetailComponent implements OnInit {
   product: any | null = null;
   reviews: any[] = [];
-  attributes: any[] = []; // Özellikleri tutacak dizi eklendi
+  attributes: any[] = [];
   quantity: number = 1;
   reviewForm!: FormGroup;
   isLoading: boolean = true;
@@ -24,21 +26,22 @@ export class ProductDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private productService: ProductService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cartService: CartService,
+    private toastr: ToastrService // ToastrService inject edildi
   ) {}
 
   ngOnInit(): void {
-    this.loadProductDetails(); // Ürün, yorum ve özellikleri yükle
+    this.loadProductDetails();
     this.createReviewForm();
   }
 
-  // Ürün, yorum ve özellikleri yükleyen metot
   loadProductDetails(): void {
     this.isLoading = true;
     this.errorLoading = false;
     this.product = null;
     this.reviews = [];
-    this.attributes = []; // Başlangıçta temizle
+    this.attributes = [];
 
     this.route.paramMap
       .pipe(
@@ -47,16 +50,14 @@ export class ProductDetailComponent implements OnInit {
           if (idParam) {
             const id = parseInt(idParam, 10);
             if (!isNaN(id)) {
-              // Ürün, Yorumlar ve Özellikleri paralel olarak getir
               return forkJoin({
                 product: this.productService.getProductById(id),
                 reviews: this.productService.getReviewsByProductId(id),
-                attributes: this.productService.getAttributesByProductId(id), // Özellikleri de getir
+                attributes: this.productService.getAttributesByProductId(id),
               }).pipe(
                 catchError((err) => {
                   console.error('Error fetching product details:', err);
                   this.errorLoading = true;
-                  // Hata durumunda tümünü boş döndür
                   return of({
                     product: undefined,
                     reviews: [],
@@ -66,34 +67,28 @@ export class ProductDetailComponent implements OnInit {
               );
             }
           }
-          // Geçersiz veya eksik ID durumu
           console.error('Invalid or missing Product ID parameter.');
           this.errorLoading = true;
           return of({ product: undefined, reviews: [], attributes: [] });
         })
       )
       .subscribe(({ product, reviews, attributes }) => {
-        // Gelen objeyi destruct et
         this.isLoading = false;
         if (product) {
           this.product = product;
           this.reviews = reviews;
-          this.attributes = attributes; // Özellikleri ata
+          this.attributes = attributes;
           this.quantity = 1;
-          console.log('Product loaded:', this.product);
-          console.log('Reviews loaded:', this.reviews);
-          console.log('Attributes loaded:', this.attributes);
         } else {
           this.product = null;
           this.reviews = [];
           this.attributes = [];
-          console.log('Product could not be loaded.');
         }
       });
   }
 
   createReviewForm(): void {
-    /* ... önceki kod aynı ... */ this.reviewForm = this.fb.group({
+    this.reviewForm = this.fb.group({
       rating: [
         null,
         [Validators.required, Validators.min(1), Validators.max(5)],
@@ -101,64 +96,68 @@ export class ProductDetailComponent implements OnInit {
       comment: ['', Validators.required],
     });
   }
+
   onReviewSubmit(): void {
-    /* ... önceki kod aynı ... */ if (
-      this.reviewForm.invalid ||
-      !this.product ||
-      this.isSubmittingReview
-    ) {
+    if (this.reviewForm.invalid || !this.product || this.isSubmittingReview) {
       this.reviewForm.markAllAsTouched();
       return;
     }
+
     this.isSubmittingReview = true;
     const mockUserId = 205;
+
     const reviewData = {
       productId: this.product.id,
       userId: mockUserId,
       rating: this.reviewForm.value.rating,
       comment: this.reviewForm.value.comment,
     };
+
     this.productService.addReview(reviewData).subscribe({
       next: (newReview) => {
-        console.log('Review added successfully (mock):', newReview);
         this.reviews.unshift(newReview);
         this.reviewForm.reset();
-        alert('Review submitted!');
+        this.toastr.success('Review submitted successfully!', 'Success'); // Toastr kullanıldı
         this.isSubmittingReview = false;
       },
       error: (err) => {
         console.error('Error submitting review (mock):', err);
-        alert('Failed to submit review. Please try again.');
+        this.toastr.error(
+          'Failed to submit review. Please try again.',
+          'Error'
+        ); // Toastr kullanıldı
         this.isSubmittingReview = false;
       },
     });
   }
+
   incrementQuantity(): void {
-    /* ... önceki kod aynı ... */ if (
-      this.product &&
-      this.quantity < this.product.stock_quantity
-    ) {
+    if (this.product && this.quantity < this.product.stock_quantity) {
       this.quantity++;
     }
   }
+
   decrementQuantity(): void {
-    /* ... önceki kod aynı ... */ if (this.quantity > 1) {
+    if (this.quantity > 1) {
       this.quantity--;
     }
   }
+
+  // Sepete ekleme metodu GÜNCELLENDİ (alert yerine toastr)
   addToCart(): void {
-    /* ... önceki kod aynı ... */ if (
-      this.product &&
-      this.product.stock_quantity > 0
-    ) {
-      console.log(
-        `Adding ${this.quantity} of ${this.product.name} (ID: ${this.product.id}) to cart.`
-      );
-      alert(
-        `${this.quantity} x ${this.product.name} added to cart (simulation)!`
+    if (this.product && this.product.stock_quantity > 0 && this.quantity > 0) {
+      this.cartService.addItem(this.product, this.quantity);
+      // alert yerine toastr kullanıldı
+      this.toastr.success(
+        `${this.quantity} x ${this.product.name} added to cart!`,
+        'Added to Cart'
       );
     } else {
-      console.warn('Cannot add to cart.');
+      // alert yerine toastr kullanıldı
+      this.toastr.error(
+        'Cannot add this item to cart. Check stock or quantity.',
+        'Error'
+      );
     }
   }
 }

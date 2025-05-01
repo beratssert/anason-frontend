@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ProductService } from '../../services/product.service';
+import { CartService } from '../../../../core/services/cart.service';
+import { ToastrService } from 'ngx-toastr'; // ToastrService eklendi
 import { forkJoin } from 'rxjs';
 
 @Component({
@@ -25,7 +27,11 @@ export class ProductListComponent implements OnInit {
   currentMaxPrice: number = 0;
   currentSortOrder: string = 'default';
 
-  constructor(private productService: ProductService) {}
+  constructor(
+    private productService: ProductService,
+    private cartService: CartService,
+    private toastr: ToastrService // ToastrService inject edildi
+  ) {}
 
   ngOnInit(): void {
     this.loadInitialData();
@@ -91,7 +97,10 @@ export class ProductListComponent implements OnInit {
           return a.id - b.id;
       }
     });
-    // Opsiyonel: Referansı değiştirmek Angular'ın değişikliği algılamasına yardımcı olabilir
-    // this.filteredProducts = [...this.filteredProducts];
+  }
+
+  addToCart(product: any): void {
+    this.cartService.addItem(product, 1);
+    this.toastr.success(`${product.name} added to cart!`, 'Success'); // Toastr bildirimi
   }
 }
