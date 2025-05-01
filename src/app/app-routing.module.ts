@@ -34,13 +34,13 @@ const routes: Routes = [
   //   loadChildren: () => import('./features/checkout/checkout.module').then(m => m.CheckoutModule), // Henüz oluşturulmadı
   //   canActivate: [authGuard] // Checkout sayfasını koru
   // },
-  // {
-  //   path: 'admin',
-  //   loadChildren: () =>
-  //     import('./features/admin/admin.module').then((m) => m.AdminModule),
-  //   canActivate: [authGuard, roleGuard], // Önce login, sonra rol kontrolü
-  //   data: { roles: ['ADMIN'] }, // Sadece ADMIN erişebilir
-  // },
+  {
+    path: 'admin',
+    loadChildren: () =>
+      import('./features/admin/admin.module').then((m) => m.AdminModule),
+    canActivate: [authGuard, roleGuard], // Önce login, sonra rol kontrolü
+    data: { roles: ['ADMIN'] }, // Sadece 'ADMIN' rolü erişebilir
+  },
   // {
   //   path: 'seller',
   //   loadChildren: () =>
@@ -52,6 +52,11 @@ const routes: Routes = [
     path: '',
     redirectTo: '/products', // Ana sayfayı ürünler listesine yönlendir (veya başka bir public sayfaya)
     pathMatch: 'full',
+  },
+  {
+    path: 'admin',
+    loadChildren: () =>
+      import('./features/admin/admin.module').then((m) => m.AdminModule),
   },
   // Eşleşmeyen Rotalar (404 Sayfası - Opsiyonel)
   // { path: '**', component: NotFoundComponent } // NotFoundComponent oluşturulmalı
