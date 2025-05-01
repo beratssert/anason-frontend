@@ -23,6 +23,7 @@ export class ProductListComponent implements OnInit {
   selectedCategory: string | null = null;
   currentMinPrice: number = 0;
   currentMaxPrice: number = 0;
+  currentSortOrder: string = 'default';
 
   constructor(private productService: ProductService) {}
 
@@ -36,26 +37,33 @@ export class ProductListComponent implements OnInit {
       products: this.productService.getProducts(),
       filters: this.productService.getFilterOptions(),
     }).subscribe(({ products, filters }) => {
-      this.products = products;
+      this.products = products.map((p) => ({
+        ...p,
+        created_at: new Date(p.created_at),
+      }));
       this.filterOptions = filters;
       this.currentMinPrice = filters.priceRange.min;
       this.currentMaxPrice = filters.priceRange.max;
-      this.applyFilters();
+      this.applyFiltersAndSort();
       this.isLoading = false;
     });
   }
 
   selectCategory(category: string | null): void {
     this.selectedCategory = category;
-    this.applyFilters();
+    this.applyFiltersAndSort();
   }
 
   onPriceChange(): void {
-    this.applyFilters();
+    this.applyFiltersAndSort();
   }
 
-  applyFilters(): void {
-    this.filteredProducts = this.products.filter((product) => {
+  onSortChange(): void {
+    this.sortProducts();
+  }
+
+  applyFiltersAndSort(): void {
+    let tempProducts = this.products.filter((product) => {
       const categoryMatch =
         !this.selectedCategory || product.category === this.selectedCategory;
       const priceMatch =
@@ -63,5 +71,27 @@ export class ProductListComponent implements OnInit {
         product.price <= this.currentMaxPrice;
       return categoryMatch && priceMatch;
     });
+    this.filteredProducts = tempProducts;
+    this.sortProducts();
+  }
+
+  sortProducts(): void {
+    if (!this.filteredProducts) return;
+
+    this.filteredProducts.sort((a, b) => {
+      switch (this.currentSortOrder) {
+        case 'price_asc':
+          return a.price - b.price;
+        case 'price_desc':
+          return b.price - a.price;
+        case 'newest':
+          return b.created_at.getTime() - a.created_at.getTime();
+        case 'default':
+        default:
+          return a.id - b.id;
+      }
+    });
+    // Opsiyonel: Referansı değiştirmek Angular'ın değişikliği algılamasına yardımcı olabilir
+    // this.filteredProducts = [...this.filteredProducts];
   }
 }

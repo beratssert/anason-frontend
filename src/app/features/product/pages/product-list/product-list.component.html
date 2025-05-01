@@ -73,11 +73,15 @@
         <span class="text-sm text-gray-600"
           >{{ filteredProducts.length }} products found</span
         >
-        <select class="border rounded p-1 text-sm">
-          <option>Default Sorting</option>
-          <option>Sort by Price: Low to High</option>
-          <option>Sort by Price: High to Low</option>
-          <option>Sort by Newest</option>
+        <select
+          class="border rounded p-1 text-sm"
+          [(ngModel)]="currentSortOrder"
+          (ngModelChange)="onSortChange()"
+        >
+          <option value="default">Default Sorting</option>
+          <option value="price_asc">Sort by Price: Low to High</option>
+          <option value="price_desc">Sort by Price: High to Low</option>
+          <option value="newest">Sort by Newest</option>
         </select>
       </div>
       <div
