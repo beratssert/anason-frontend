@@ -1,26 +1,25 @@
-import { Injectable, OnDestroy } from '@angular/core'; // OnDestroy eklendi
+import { Injectable, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, throwError, timer } from 'rxjs';
 import { delay, map, tap, catchError, switchMap } from 'rxjs/operators';
 
-// Kullanıcı interface'i
+// User interface GÜNCELLENDİ (created_at? eklendi)
 export interface User {
   id: number;
   username?: string;
   email: string;
   role: 'CUSTOMER' | 'ADMIN' | 'SELLER';
+  created_at?: Date | string; // Kayıt tarihi eklendi (opsiyonel)
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService implements OnDestroy {
-  // OnDestroy implement edildi
-
   private readonly AUTH_STATUS_KEY = 'anason_auth_status';
   private readonly AUTH_USER_KEY = 'anason_auth_user';
 
-  // Mock Kullanıcılar (Şifreler açık metin - SADECE MOCK İÇİN!)
+  // Mock Kullanıcılar GÜNCELLENDİ (created_at eklendi)
   private mockUsers = [
     {
       id: 1,
@@ -28,6 +27,7 @@ export class AuthService implements OnDestroy {
       password: 'password',
       role: 'CUSTOMER' as const,
       username: 'Cust Omer',
+      created_at: new Date('2024-01-15T10:00:00Z'),
     },
     {
       id: 2,
@@ -35,6 +35,7 @@ export class AuthService implements OnDestroy {
       password: 'password',
       role: 'SELLER' as const,
       username: 'Sell Er',
+      created_at: new Date('2024-02-20T11:30:00Z'),
     },
     {
       id: 3,
@@ -42,6 +43,7 @@ export class AuthService implements OnDestroy {
       password: 'password',
       role: 'ADMIN' as const,
       username: 'Admin İstrator',
+      created_at: new Date('2023-12-01T09:00:00Z'),
     },
   ];
 
@@ -51,7 +53,6 @@ export class AuthService implements OnDestroy {
   public currentUser$: Observable<User | null>;
   public isLoggedIn$: Observable<boolean>;
 
-  // Storage event listener referansı (kaldırmak için)
   private storageEventListener: (event: StorageEvent) => void;
 
   constructor(private router: Router) {
@@ -62,7 +63,6 @@ export class AuthService implements OnDestroy {
     this.currentUser$ = this.currentUserSubject.asObservable();
     this.isLoggedIn$ = this.isLoggedInSubject.asObservable();
 
-    // Event listener'ı bind et ve referansını sakla
     this.storageEventListener = this.handleStorageChange.bind(this);
     if (typeof window !== 'undefined') {
       window.addEventListener('storage', this.storageEventListener);
@@ -73,7 +73,6 @@ export class AuthService implements OnDestroy {
     );
   }
 
-  // Component destroy olduğunda listener'ı kaldır
   ngOnDestroy(): void {
     if (typeof window !== 'undefined') {
       window.removeEventListener('storage', this.storageEventListener);
@@ -86,7 +85,6 @@ export class AuthService implements OnDestroy {
       event.key === this.AUTH_USER_KEY
     ) {
       const user = this.loadUserFromStorage();
-      // Değişiklik yoksa gereksiz yayın yapma
       if (
         JSON.stringify(this.currentUserSubject.value) !== JSON.stringify(user)
       ) {
@@ -106,41 +104,45 @@ export class AuthService implements OnDestroy {
       if (storedUser && storedStatus === 'true') {
         try {
           const parsedUser = JSON.parse(storedUser);
-          // Temel kullanıcı yapısını doğrula (opsiyonel ama daha güvenli)
+          // User interface'ine uygunluğunu kontrol et (created_at dahil)
           if (
             parsedUser &&
             typeof parsedUser.id === 'number' &&
             typeof parsedUser.email === 'string' &&
             typeof parsedUser.role === 'string'
           ) {
+            // Tarihi string ise Date objesine çevir (opsiyonel, ama DatePipe için daha iyi)
+            if (
+              parsedUser.created_at &&
+              typeof parsedUser.created_at === 'string'
+            ) {
+              parsedUser.created_at = new Date(parsedUser.created_at);
+            }
             return parsedUser as User;
           } else {
             console.warn('Invalid user structure in localStorage.');
-            this.clearAuthDataInternal(); // Hatalıysa temizle (logout çağrılmaz)
+            this.clearAuthDataInternal();
             return null;
           }
         } catch (e) {
           console.error('Error parsing user from localStorage', e);
-          this.clearAuthDataInternal(); // Hatalıysa temizle
+          this.clearAuthDataInternal();
           return null;
         }
       }
     }
-    // Eğer localStorage'da geçerli veri yoksa veya status 'true' değilse, temizle
+    // localStorage'da veri yoksa veya status 'true' değilse temizle
     if (this.currentUserSubject?.value || this.isLoggedInSubject?.value) {
-      // Servis init olurken subjects null olabilir
       this.clearAuthDataInternal();
     }
     return null;
   }
 
-  // Sadece localStorage'ı ve Subject'leri temizler, yönlendirme yapmaz
   private clearAuthDataInternal(): void {
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(this.AUTH_STATUS_KEY);
       localStorage.removeItem(this.AUTH_USER_KEY);
     }
-    // Subject'lerin varlığını kontrol et (constructor bitmeden çağrılabilir)
     if (this.currentUserSubject && this.currentUserSubject.value !== null) {
       this.currentUserSubject.next(null);
     }
@@ -149,12 +151,12 @@ export class AuthService implements OnDestroy {
     }
   }
 
-  // localStorage'a ve Subject'lere veri yazar
   private storeAuthData(user: User): void {
-    // Şifreyi asla localStorage'a yazma!
-    const { password, ...userDataToStore } = this.mockUsers.find(
-      (u) => u.id === user.id
-    )!; // Şifreyi tekrar mock listesinden ayıkla
+    // mockUsers dizisinden tam kullanıcı objesini bul (şifre dahil olabilir)
+    const userWithPass = this.mockUsers.find((u) => u.id === user.id);
+    if (!userWithPass) return; // Kullanıcı bulunamazsa (teorik olarak olmamalı)
+
+    const { password, ...userDataToStore } = userWithPass; // Şifreyi ayıkla
 
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(this.AUTH_STATUS_KEY, 'true');
@@ -176,7 +178,6 @@ export class AuthService implements OnDestroy {
     email?: string | null;
     password?: string | null;
   }): Observable<User> {
-    // Başarıda User döndürür
     console.log('AuthService: Attempting login with', credentials);
     const email = credentials?.email;
     const password = credentials?.password;
@@ -189,10 +190,8 @@ export class AuthService implements OnDestroy {
       (user) => user.email === email && user.password === password
     );
 
-    // Sonucu Observable olarak döndürmeden önce gecikme ekle
     return timer(500).pipe(
       switchMap(() => {
-        // switchMap kullanarak hatayı veya sonucu Observable'a çevir
         if (foundUser) {
           console.log(
             'AuthService: Mock login successful for:',
@@ -200,36 +199,32 @@ export class AuthService implements OnDestroy {
             'Role:',
             foundUser.role
           );
-          this.storeAuthData(foundUser as User); // User tipini belirt
-          // Başarı durumunda kullanıcı bilgisini döndür (şifresiz)
+          this.storeAuthData(foundUser as User);
           const { password, ...userToReturn } = foundUser;
           return of(userToReturn as User);
         } else {
           console.log('AuthService: Mock login failed for:', email);
-          this.clearAuthDataInternal(); // Sadece veriyi temizle
-          // Başarısız durumda hata fırlat
+          this.clearAuthDataInternal();
           return throwError(() => new Error('Invalid email or password.'));
         }
       }),
-      // Genel hata yakalama (opsiyonel, ama loglama için iyi)
       catchError((err) => {
         console.error('Login pipe error:', err.message);
-        // Hata durumunda subject'lerin temizlendiğinden emin ol
         this.clearAuthDataInternal();
-        return throwError(() => err); // Hata objesini tekrar fırlat
+        return throwError(() => err);
       })
     );
   }
 
   logout(): void {
     console.log('AuthService: Logging out');
-    this.clearAuthDataInternal(); // Veriyi temizle
-    this.router.navigate(['/auth/login']); // Login sayfasına yönlendir
+    this.clearAuthDataInternal();
+    this.router.navigate(['/auth/login']);
   }
 
   hasRole(expectedRole: 'CUSTOMER' | 'ADMIN' | 'SELLER'): boolean {
     const currentUser = this.currentUserValue;
-    return !!currentUser && currentUser.role === expectedRole; // Kullanıcı null değilse ve rol eşleşiyorsa
+    return !!currentUser && currentUser.role === expectedRole;
   }
 
   getUserRole(): string | null {

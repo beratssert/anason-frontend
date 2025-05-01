@@ -1,0 +1,67 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">My Profile</h1>
+
+  <ng-container *ngIf="user$ | async as user; else loadingOrError">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">
+        Account Information
+      </h2>
+      <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">Username</dt>
+          <dd class="mt-1 text-sm text-gray-900">
+            {{ user.username || "N/A" }}
+          </dd>
+        </div>
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">Email address</dt>
+          <dd class="mt-1 text-sm text-gray-900">{{ user.email }}</dd>
+        </div>
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">User Role</dt>
+          <dd class="mt-1 text-sm text-gray-900 capitalize">
+            {{ user.role.toLowerCase() }}
+          </dd>
+        </div>
+        <div class="sm:col-span-1">
+          <dt class="text-sm font-medium text-gray-500">Member Since</dt>
+          <dd class="mt-1 text-sm text-gray-900">
+            {{
+              user.created_at ? (user.created_at | date : "longDate") : "N/A"
+            }}
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6 mb-8">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">My Addresses</h2>
+        <button
+          type="button"
+          class="text-sm font-medium text-orange-600 hover:text-orange-500"
+        >
+          Manage Addresses
+        </button>
+      </div>
+      <p class="text-sm text-gray-500">You have no saved addresses yet.</p>
+    </div>
+
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">Order History</h2>
+        <button
+          type="button"
+          class="text-sm font-medium text-orange-600 hover:text-orange-500"
+        >
+          View All Orders
+        </button>
+      </div>
+      <p class="text-sm text-gray-500">You haven't placed any orders yet.</p>
+    </div>
+  </ng-container>
+
+  <ng-template #loadingOrError>
+    <div class="text-center py-10 text-gray-500">Loading user profile...</div>
+  </ng-template>
+</div>
