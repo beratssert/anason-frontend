@@ -31,6 +31,14 @@
             }}
           </dd>
         </div>
+        <div class="sm:col-span-2 text-right">
+          <button
+            type="button"
+            class="text-sm font-medium text-orange-600 hover:text-orange-500"
+          >
+            Edit Profile
+          </button>
+        </div>
       </dl>
     </div>
 
@@ -44,20 +52,17 @@
           Manage Addresses
         </button>
       </div>
-      <p class="text-sm text-gray-500">You have no saved addresses yet.</p>
     </div>
 
     <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold text-gray-900">Order History</h2>
-        <button
-          type="button"
+        <a
+          routerLink="/orders"
           class="text-sm font-medium text-orange-600 hover:text-orange-500"
+          >View All Orders</a
         >
-          View All Orders
-        </button>
       </div>
-      <p class="text-sm text-gray-500">You haven't placed any orders yet.</p>
     </div>
   </ng-container>
 
