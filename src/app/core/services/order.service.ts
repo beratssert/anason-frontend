@@ -2,39 +2,38 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
-// SQL şemasına göre Interface'ler
+// Interfaces
 export interface OrderItem {
   product_id: number;
   quantity: number;
   unit_price: number;
-  // Gösterim kolaylığı için eklenebilir (normalde ProductService'ten alınır)
-  productName?: string;
-  imageUrl?: string;
+  productName?: string; // Mock data convenience
+  imageUrl?: string; // Mock data convenience
 }
 
+export type OrderStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELLED'
+  | 'RETURN_REQUESTED'
+  | 'RETURNED';
+
 export interface Order {
-  id: number; // orders.id
-  user_id: number; // orders.user_id
-  status:
-    | 'PENDING'
-    | 'PROCESSING'
-    | 'SHIPPED'
-    | 'DELIVERED'
-    | 'CANCELLED'
-    | 'RETURN_REQUESTED'
-    | 'RETURNED'; // orders.status
-  total_price: number; // orders.total_price
-  created_at: Date | string; // orders.created_at
-  items: OrderItem[]; // order_items tablosundan gelenler
-  // logistic_id, shipping_address_id gibi alanlar da eklenebilir
+  id: number;
+  user_id: number;
+  status: OrderStatus;
+  total_price: number;
+  created_at: Date | string;
+  items: OrderItem[];
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrderService {
-  // Mock Sipariş Verileri
-  // user_id'leri AuthService'teki mock user ID'leri ile eşleştirelim (1, 2)
+  // Mock Data
   private mockOrders: Order[] = [
     {
       id: 1001,
@@ -123,35 +122,54 @@ export class OrderService {
     },
   ];
 
+  public readonly orderStatuses: OrderStatus[] = [
+    'PENDING',
+    'PROCESSING',
+    'SHIPPED',
+    'DELIVERED',
+    'CANCELLED',
+    'RETURN_REQUESTED',
+    'RETURNED',
+  ];
+
   constructor() {}
 
-  // Kullanıcı ID'sine göre siparişleri getiren mock metot
   getOrdersByUserId(userId: number): Observable<Order[]> {
-    console.log(`OrderService (Mock): Fetching orders for User ID: ${userId}`);
-    // Gerçek uygulamada API çağrısı /api/users/{userId}/orders gibi bir endpoint'e yapılır
     const userOrders = this.mockOrders.filter(
       (order) => order.user_id === userId
     );
-    // Siparişleri tarihe göre tersten sıralayabiliriz (en yeni en üstte)
     userOrders.sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-    console.log(
-      `Found ${userOrders.length} orders for user ${userId}:`,
-      userOrders
-    );
-    return of(userOrders).pipe(delay(400)); // API gecikmesini simüle et
+    return of(userOrders).pipe(delay(400));
   }
 
-  // Tek bir siparişin detayını getiren mock metot (ileride lazım olabilir)
   getOrderById(orderId: number, userId: number): Observable<Order | undefined> {
-    console.log(
-      `OrderService (Mock): Fetching order details for Order ID: ${orderId}, User ID: ${userId}`
-    );
     const order = this.mockOrders.find(
       (o) => o.id === orderId && o.user_id === userId
     );
     return of(order).pipe(delay(200));
+  }
+
+  getAllOrders(): Observable<Order[]> {
+    const allOrders = [...this.mockOrders].sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    return of(allOrders).pipe(delay(350));
+  }
+
+  updateOrderStatus(
+    orderId: number,
+    newStatus: OrderStatus
+  ): Observable<Order | null> {
+    const orderIndex = this.mockOrders.findIndex((o) => o.id === orderId);
+    if (orderIndex > -1) {
+      this.mockOrders[orderIndex].status = newStatus;
+      return of(this.mockOrders[orderIndex]).pipe(delay(250));
+    } else {
+      return of(null).pipe(delay(250));
+    }
   }
 }

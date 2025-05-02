@@ -6,6 +6,7 @@ import { AdminComponent } from './admin.component';
 import { AdminDashboardComponent } from './pages/admin-dashboard/admin-dashboard.component';
 import { UserManagementComponent } from './pages/user-management/user-management.component';
 import { AdminProductManagementComponent } from './pages/admin-product-management/admin-product-management.component';
+import { AdminOrderManagementComponent } from './pages/admin-order-management/admin-order-management.component';
 
 
 @NgModule({
@@ -13,7 +14,8 @@ import { AdminProductManagementComponent } from './pages/admin-product-managemen
     AdminComponent,
     AdminDashboardComponent,
     UserManagementComponent,
-    AdminProductManagementComponent
+    AdminProductManagementComponent,
+    AdminOrderManagementComponent
   ],
   imports: [
     CommonModule,
