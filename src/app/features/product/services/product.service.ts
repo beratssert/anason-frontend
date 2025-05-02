@@ -340,6 +340,23 @@ export class ProductService {
     }
   }
 
+  deleteProductByIdAsAdmin(productId: number): Observable<boolean> {
+    console.log(
+      `ProductService (Mock): [ADMIN] Attempting to delete product ${productId}`
+    );
+    const initialLength = this.mockProducts.length;
+    this.mockProducts = this.mockProducts.filter((p) => p.id !== productId); // Sadece ID ile filtrele
+
+    if (this.mockProducts.length < initialLength) {
+      this.saveProductsToStorage(); // Değişikliği kaydet
+      console.log(`Product ${productId} deleted successfully by Admin.`);
+      return of(true).pipe(delay(300));
+    } else {
+      console.error(`[ADMIN] Product ${productId} not found for deletion.`);
+      return of(false).pipe(delay(300));
+    }
+  }
+
   addProduct(productData: any, sellerId: number): Observable<any> {
     const newId =
       this.mockProducts.length > 0
