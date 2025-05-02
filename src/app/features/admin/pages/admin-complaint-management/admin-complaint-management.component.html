@@ -1,0 +1,139 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">
+    Admin - Complaint Management
+  </h1>
+
+  <div *ngIf="isLoading" class="text-center py-10">Loading complaints...</div>
+
+  <div
+    *ngIf="!isLoading && complaints.length === 0"
+    class="text-center py-10 text-gray-500 bg-white shadow rounded-lg p-6"
+  >
+    No complaints found.
+  </div>
+
+  <div
+    *ngIf="!isLoading && complaints.length > 0"
+    class="bg-white shadow overflow-hidden sm:rounded-lg"
+  >
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              ID
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              User ID
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Order ID
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Issue Type
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Description
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Date
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Status
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr
+            *ngFor="let complaint of complaints"
+            [class.opacity-50]="updatingComplaintId === complaint.id"
+          >
+            <td
+              class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+            >
+              {{ complaint.id }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ complaint.user_id }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ complaint.order_id }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ complaint.issue_type }}
+            </td>
+            <td
+              class="px-6 py-4 text-sm text-gray-700 max-w-sm truncate"
+              [title]="complaint.description"
+            >
+              {{ complaint.description }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ complaint.created_at | date : "short" }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-xs">
+              <select
+                [value]="complaint.status"
+                (change)="onStatusChange(complaint, $event)"
+                [disabled]="updatingComplaintId === complaint.id"
+                class="border rounded p-1 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                [ngClass]="{
+                  'bg-red-100 text-red-800 border-red-300':
+                    complaint.status === 'OPEN',
+                  'bg-blue-100 text-blue-800 border-blue-300':
+                    complaint.status === 'IN_PROGRESS',
+                  'bg-green-100 text-green-800 border-green-300':
+                    complaint.status === 'RESOLVED',
+                  'bg-gray-100 text-gray-800 border-gray-300':
+                    complaint.status === 'REJECTED'
+                }"
+              >
+                <option
+                  *ngFor="let status of possibleStatuses"
+                  [value]="status"
+                >
+                  {{ status }}
+                </option>
+              </select>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <a
+                [routerLink]="['./', complaint.id]"
+                class="text-indigo-600 hover:text-indigo-900"
+              >
+                Details
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
