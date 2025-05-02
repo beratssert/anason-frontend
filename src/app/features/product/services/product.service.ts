@@ -1,6 +1,18 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { delay, map, catchError } from 'rxjs/operators';
+
+// Interface'ler ve mock datalar burada tanımlı olmalı
+// ... (User, CartItem, Cart interface'leri gerekirse buraya taşınabilir veya import edilebilir) ...
+// ... (mockProducts, mockReviews, mockAttributes, mockAttributeValues dizileri burada) ...
+export interface AdminManagedUser {
+  id: number;
+  username?: string;
+  email: string;
+  role: 'CUSTOMER' | 'ADMIN' | 'SELLER';
+  status: 'ACTIVE' | 'BANNED';
+  created_at: Date | string;
+} // AdminService'ten alındı, belki User interface'i genişletilebilir
 
 @Injectable({
   providedIn: 'root',
@@ -11,8 +23,7 @@ export class ProductService {
       id: 1,
       seller_id: 101,
       name: 'Smartwatch Pro X',
-      description:
-        'Latest generation smartwatch with advanced health tracking.',
+      description: 'Latest generation smartwatch...',
       price: 199.99,
       stock_quantity: 50,
       category: 'Electronics',
@@ -23,8 +34,7 @@ export class ProductService {
       id: 2,
       seller_id: 102,
       name: 'Organic Cotton T-Shirt',
-      description:
-        'Comfortable and sustainable t-shirt made from 100% organic cotton.',
+      description: 'Comfortable and sustainable t-shirt...',
       price: 25.5,
       stock_quantity: 120,
       category: 'Clothing',
@@ -35,7 +45,7 @@ export class ProductService {
       id: 3,
       seller_id: 101,
       name: 'Wireless Noise-Cancelling Headphones',
-      description: 'Immersive sound experience with active noise cancellation.',
+      description: 'Immersive sound experience...',
       price: 149.0,
       stock_quantity: 30,
       category: 'Electronics',
@@ -46,8 +56,7 @@ export class ProductService {
       id: 4,
       seller_id: 103,
       name: 'Ceramic Coffee Mug Set (Set of 4)',
-      description:
-        'Stylish and durable ceramic mugs, perfect for your morning coffee.',
+      description: 'Stylish and durable ceramic mugs...',
       price: 35.99,
       stock_quantity: 80,
       category: 'Home & Garden',
@@ -58,8 +67,7 @@ export class ProductService {
       id: 5,
       seller_id: 102,
       name: 'Running Shoes - Model Runner',
-      description:
-        'Lightweight and breathable running shoes for optimal performance.',
+      description: 'Lightweight and breathable running shoes...',
       price: 89.9,
       stock_quantity: 0,
       category: 'Shoes & Bags',
@@ -89,7 +97,6 @@ export class ProductService {
       created_at: new Date('2024-04-28'),
     },
   ];
-
   private mockReviews: any[] = [
     {
       id: 101,
@@ -147,7 +154,6 @@ export class ProductService {
       created_at: new Date('2024-04-28T08:00:00'),
     },
   ];
-
   private mockAttributes: any[] = [
     { id: 1, name: 'Color', data_type: 'STRING', category: 'Clothing' },
     { id: 2, name: 'Size', data_type: 'STRING', category: 'Clothing' },
@@ -183,7 +189,6 @@ export class ProductService {
       category: 'Shoes & Bags',
     },
   ];
-
   private mockAttributeValues: any[] = [
     { id: 201, product_id: 1, attribute_id: 4, value: '1.78' },
     { id: 202, product_id: 1, attribute_id: 5, value: '5 ATM' },
@@ -244,7 +249,7 @@ export class ProductService {
       id: newReviewId,
       product_id: reviewData.productId,
       user_id: reviewData.userId,
-      username: `User_${reviewData.userId}`, // Mock username
+      username: `User_${reviewData.userId}`,
       rating: reviewData.rating,
       comment: reviewData.comment,
       created_at: new Date(),
@@ -269,4 +274,38 @@ export class ProductService {
     };
     return of(filterOptions).pipe(delay(80));
   }
+
+  getProductsBySellerId(sellerId: number): Observable<any[]> {
+    console.log(
+      `ProductService (Mock): Fetching products for Seller ID: ${sellerId}`
+    );
+    const sellerProducts = this.mockProducts.filter(
+      (p) => p.seller_id === sellerId
+    );
+    return of(sellerProducts).pipe(delay(250));
+  }
+
+  deleteProduct(productId: number, sellerId: number): Observable<boolean> {
+    console.log(
+      `ProductService (Mock): Attempting to delete product ${productId} for seller ${sellerId}`
+    );
+    const initialLength = this.mockProducts.length;
+    this.mockProducts = this.mockProducts.filter(
+      (p) => !(p.id === productId && p.seller_id === sellerId)
+    );
+
+    if (this.mockProducts.length < initialLength) {
+      console.log(`Product ${productId} deleted successfully.`);
+      return of(true).pipe(delay(300));
+    } else {
+      console.error(
+        `Product ${productId} not found or does not belong to seller ${sellerId}.`
+      );
+      return of(false).pipe(delay(300));
+    }
+  }
+
+  // !!! İleride Eklenecek Metotlar !!!
+  // addProduct(productData: any, sellerId: number): Observable<any> { ... }
+  // updateProduct(productId: number, productData: any, sellerId: number): Observable<any | null> { ... }
 }

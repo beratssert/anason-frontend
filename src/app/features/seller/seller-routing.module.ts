@@ -1,11 +1,17 @@
-// src/app/features/seller/seller-routing.module.ts
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { SellerDashboardComponent } from './pages/seller-dashboard/seller-dashboard.component'; // Import et
+import { SellerDashboardComponent } from './pages/seller-dashboard/seller-dashboard.component';
+import { MyProductsComponent } from './pages/my-products/my-products.component';
 
 const routes: Routes = [
-  { path: '', component: SellerDashboardComponent },
-  // İleride satıcı alt rotaları buraya eklenecek (örn: path: 'my-products')
+  {
+    path: '',
+    component: SellerDashboardComponent,
+  },
+  {
+    path: 'my-products',
+    component: MyProductsComponent,
+  },
 ];
 
 @NgModule({
