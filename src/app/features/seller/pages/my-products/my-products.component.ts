@@ -101,11 +101,7 @@ export class MyProductsComponent implements OnInit {
   }
 
   goToAddProduct(): void {
-    this.toastr.info(
-      'Add Product functionality will be implemented later.',
-      'Info'
-    );
-    // this.router.navigate(['/seller/add-product']); // Gelecekteki rota
+    this.router.navigate(['/seller/add-product']);
   }
 
   goToEditProduct(productId: number): void {

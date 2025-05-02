@@ -1,0 +1,208 @@
+<form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="space-y-4">
+  <div>
+    <label for="name" class="block text-sm font-medium text-gray-700"
+      >Product Name</label
+    >
+    <input
+      type="text"
+      id="name"
+      formControlName="name"
+      required
+      class="mt-1 block w-full border rounded-md shadow-sm p-2"
+      [ngClass]="{
+        'border-red-500 focus:ring-red-500 focus:border-red-500':
+          name?.invalid && name?.touched,
+        'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+          name?.invalid && name?.touched
+        )
+      }"
+    />
+    <div
+      *ngIf="name?.invalid && (name?.dirty || name?.touched)"
+      class="mt-1 text-xs text-red-600"
+    >
+      <span *ngIf="name?.errors?.['required']">Product name is required.</span>
+      <span *ngIf="name?.errors?.['minlength']"
+        >Name must be at least 3 characters long.</span
+      >
+    </div>
+  </div>
+
+  <div>
+    <label for="category" class="block text-sm font-medium text-gray-700"
+      >Category</label
+    >
+    <input
+      type="text"
+      id="category"
+      formControlName="category"
+      required
+      class="mt-1 block w-full border rounded-md shadow-sm p-2"
+      [ngClass]="{
+        'border-red-500 focus:ring-red-500 focus:border-red-500':
+          category?.invalid && category?.touched,
+        'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+          category?.invalid && category?.touched
+        )
+      }"
+    />
+    <div
+      *ngIf="category?.invalid && (category?.dirty || category?.touched)"
+      class="mt-1 text-xs text-red-600"
+    >
+      <span *ngIf="category?.errors?.['required']">Category is required.</span>
+    </div>
+  </div>
+
+  <div>
+    <label for="description" class="block text-sm font-medium text-gray-700"
+      >Description</label
+    >
+    <textarea
+      id="description"
+      formControlName="description"
+      rows="4"
+      required
+      class="mt-1 block w-full border rounded-md shadow-sm p-2"
+      [ngClass]="{
+        'border-red-500 focus:ring-red-500 focus:border-red-500':
+          description?.invalid && description?.touched,
+        'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+          description?.invalid && description?.touched
+        )
+      }"
+    ></textarea>
+    <div
+      *ngIf="
+        description?.invalid && (description?.dirty || description?.touched)
+      "
+      class="mt-1 text-xs text-red-600"
+    >
+      <span *ngIf="description?.errors?.['required']"
+        >Description is required.</span
+      >
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <label for="price" class="block text-sm font-medium text-gray-700"
+        >Price ($)</label
+      >
+      <input
+        type="number"
+        id="price"
+        formControlName="price"
+        required
+        min="0.01"
+        step="0.01"
+        class="mt-1 block w-full border rounded-md shadow-sm p-2"
+        [ngClass]="{
+          'border-red-500 focus:ring-red-500 focus:border-red-500':
+            price?.invalid && price?.touched,
+          'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+            price?.invalid && price?.touched
+          )
+        }"
+      />
+      <div
+        *ngIf="price?.invalid && (price?.dirty || price?.touched)"
+        class="mt-1 text-xs text-red-600"
+      >
+        <span *ngIf="price?.errors?.['required']">Price is required.</span>
+        <span *ngIf="price?.errors?.['min']"
+          >Price must be greater than 0.</span
+        >
+      </div>
+    </div>
+
+    <div>
+      <label
+        for="stock_quantity"
+        class="block text-sm font-medium text-gray-700"
+        >Stock Quantity</label
+      >
+      <input
+        type="number"
+        id="stock_quantity"
+        formControlName="stock_quantity"
+        required
+        min="0"
+        step="1"
+        class="mt-1 block w-full border rounded-md shadow-sm p-2"
+        [ngClass]="{
+          'border-red-500 focus:ring-red-500 focus:border-red-500':
+            stock_quantity?.invalid && stock_quantity?.touched,
+          'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+            stock_quantity?.invalid && stock_quantity?.touched
+          )
+        }"
+      />
+      <div
+        *ngIf="
+          stock_quantity?.invalid &&
+          (stock_quantity?.dirty || stock_quantity?.touched)
+        "
+        class="mt-1 text-xs text-red-600"
+      >
+        <span *ngIf="stock_quantity?.errors?.['required']"
+          >Stock quantity is required.</span
+        >
+        <span *ngIf="stock_quantity?.errors?.['min']"
+          >Stock cannot be negative.</span
+        >
+        <span *ngIf="stock_quantity?.errors?.['pattern']"
+          >Stock must be a whole number.</span
+        >
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <label for="image_url" class="block text-sm font-medium text-gray-700"
+      >Image URL (Optional)</label
+    >
+    <input
+      type="url"
+      id="image_url"
+      formControlName="image_url"
+      placeholder="https://example.com/image.jpg"
+      class="mt-1 block w-full border rounded-md shadow-sm p-2"
+      [ngClass]="{
+        'border-red-500 focus:ring-red-500 focus:border-red-500':
+          image_url?.invalid && image_url?.touched,
+        'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+          image_url?.invalid && image_url?.touched
+        )
+      }"
+    />
+    <div
+      *ngIf="image_url?.invalid && (image_url?.dirty || image_url?.touched)"
+      class="mt-1 text-xs text-red-600"
+    >
+      <span *ngIf="image_url?.errors?.['pattern']"
+        >Please enter a valid URL (e.g., http://...).</span
+      >
+    </div>
+  </div>
+
+  <div class="flex justify-end items-center gap-4 pt-4">
+    <button
+      type="button"
+      (click)="onCancelClick()"
+      class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+    >
+      Cancel
+    </button>
+    <button
+      type="submit"
+      [disabled]="productForm.invalid || isLoading"
+      class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-wait"
+    >
+      <span *ngIf="!isLoading">{{
+        isEditMode ? "Update Product" : "Add Product"
+      }}</span>
+      <span *ngIf="isLoading">Saving...</span>
+    </button>
+  </div>
+</form>

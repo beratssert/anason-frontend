@@ -2,9 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { delay, map, catchError } from 'rxjs/operators';
 
-// Interface'ler ve mock datalar burada tanımlı olmalı
-// ... (User, CartItem, Cart interface'leri gerekirse buraya taşınabilir veya import edilebilir) ...
-// ... (mockProducts, mockReviews, mockAttributes, mockAttributeValues dizileri burada) ...
+// Gerekirse interface'ler buraya veya ayrı bir dosyaya taşınabilir
 export interface AdminManagedUser {
   id: number;
   username?: string;
@@ -12,7 +10,7 @@ export interface AdminManagedUser {
   role: 'CUSTOMER' | 'ADMIN' | 'SELLER';
   status: 'ACTIVE' | 'BANNED';
   created_at: Date | string;
-} // AdminService'ten alındı, belki User interface'i genişletilebilir
+}
 
 @Injectable({
   providedIn: 'root',
@@ -23,7 +21,8 @@ export class ProductService {
       id: 1,
       seller_id: 101,
       name: 'Smartwatch Pro X',
-      description: 'Latest generation smartwatch...',
+      description:
+        'Latest generation smartwatch with advanced health tracking.',
       price: 199.99,
       stock_quantity: 50,
       category: 'Electronics',
@@ -34,7 +33,8 @@ export class ProductService {
       id: 2,
       seller_id: 102,
       name: 'Organic Cotton T-Shirt',
-      description: 'Comfortable and sustainable t-shirt...',
+      description:
+        'Comfortable and sustainable t-shirt made from 100% organic cotton.',
       price: 25.5,
       stock_quantity: 120,
       category: 'Clothing',
@@ -45,7 +45,7 @@ export class ProductService {
       id: 3,
       seller_id: 101,
       name: 'Wireless Noise-Cancelling Headphones',
-      description: 'Immersive sound experience...',
+      description: 'Immersive sound experience with active noise cancellation.',
       price: 149.0,
       stock_quantity: 30,
       category: 'Electronics',
@@ -56,7 +56,8 @@ export class ProductService {
       id: 4,
       seller_id: 103,
       name: 'Ceramic Coffee Mug Set (Set of 4)',
-      description: 'Stylish and durable ceramic mugs...',
+      description:
+        'Stylish and durable ceramic mugs, perfect for your morning coffee.',
       price: 35.99,
       stock_quantity: 80,
       category: 'Home & Garden',
@@ -67,7 +68,8 @@ export class ProductService {
       id: 5,
       seller_id: 102,
       name: 'Running Shoes - Model Runner',
-      description: 'Lightweight and breathable running shoes...',
+      description:
+        'Lightweight and breathable running shoes for optimal performance.',
       price: 89.9,
       stock_quantity: 0,
       category: 'Shoes & Bags',
@@ -97,6 +99,7 @@ export class ProductService {
       created_at: new Date('2024-04-28'),
     },
   ];
+
   private mockReviews: any[] = [
     {
       id: 101,
@@ -154,6 +157,7 @@ export class ProductService {
       created_at: new Date('2024-04-28T08:00:00'),
     },
   ];
+
   private mockAttributes: any[] = [
     { id: 1, name: 'Color', data_type: 'STRING', category: 'Clothing' },
     { id: 2, name: 'Size', data_type: 'STRING', category: 'Clothing' },
@@ -189,6 +193,7 @@ export class ProductService {
       category: 'Shoes & Bags',
     },
   ];
+
   private mockAttributeValues: any[] = [
     { id: 201, product_id: 1, attribute_id: 4, value: '1.78' },
     { id: 202, product_id: 1, attribute_id: 5, value: '5 ATM' },
@@ -276,9 +281,6 @@ export class ProductService {
   }
 
   getProductsBySellerId(sellerId: number): Observable<any[]> {
-    console.log(
-      `ProductService (Mock): Fetching products for Seller ID: ${sellerId}`
-    );
     const sellerProducts = this.mockProducts.filter(
       (p) => p.seller_id === sellerId
     );
@@ -286,26 +288,71 @@ export class ProductService {
   }
 
   deleteProduct(productId: number, sellerId: number): Observable<boolean> {
-    console.log(
-      `ProductService (Mock): Attempting to delete product ${productId} for seller ${sellerId}`
-    );
     const initialLength = this.mockProducts.length;
     this.mockProducts = this.mockProducts.filter(
       (p) => !(p.id === productId && p.seller_id === sellerId)
     );
-
     if (this.mockProducts.length < initialLength) {
-      console.log(`Product ${productId} deleted successfully.`);
       return of(true).pipe(delay(300));
     } else {
-      console.error(
-        `Product ${productId} not found or does not belong to seller ${sellerId}.`
-      );
       return of(false).pipe(delay(300));
     }
   }
 
-  // !!! İleride Eklenecek Metotlar !!!
-  // addProduct(productData: any, sellerId: number): Observable<any> { ... }
-  // updateProduct(productId: number, productData: any, sellerId: number): Observable<any | null> { ... }
+  addProduct(productData: any, sellerId: number): Observable<any> {
+    const newId = Math.max(0, ...this.mockProducts.map((p) => p.id)) + 1;
+    const newProduct = {
+      id: newId,
+      seller_id: sellerId,
+      name: productData.name,
+      description: productData.description,
+      price: productData.price,
+      stock_quantity: productData.stock_quantity,
+      category: productData.category,
+      image_url: productData.image_url || 'assets/images/placeholder.png',
+      created_at: new Date(),
+    };
+    this.mockProducts.push(newProduct);
+    console.log('Product added to mock list:', newProduct);
+    console.log('Updated mock products:', this.mockProducts);
+    return of(newProduct).pipe(delay(400));
+  }
+
+  updateProduct(
+    productId: number,
+    productData: any,
+    sellerId: number
+  ): Observable<any | null> {
+    console.log(
+      `ProductService (Mock): Attempting to update product ${productId} for seller ${sellerId}`,
+      productData
+    );
+    const productIndex = this.mockProducts.findIndex(
+      (p) => p.id === productId && p.seller_id === sellerId
+    );
+
+    if (productIndex > -1) {
+      // Güncellenecek ürünü al ve yeni verilerle birleştir
+      const updatedProduct = {
+        ...this.mockProducts[productIndex], // Mevcut verileri koru (id, seller_id, created_at)
+        name: productData.name,
+        description: productData.description,
+        price: productData.price,
+        stock_quantity: productData.stock_quantity,
+        category: productData.category,
+        image_url:
+          productData.image_url || this.mockProducts[productIndex].image_url, // URL boşsa eskisini koru
+        // created_at güncellenmez, updated_at eklenebilir
+      };
+      this.mockProducts[productIndex] = updatedProduct; // Dizideki ürünü güncelle
+      console.log('Product updated in mock list:', updatedProduct);
+      console.log('Updated mock products:', this.mockProducts);
+      return of(updatedProduct).pipe(delay(400)); // Güncellenmiş ürünü döndür
+    } else {
+      console.error(
+        `Product ${productId} not found or does not belong to seller ${sellerId}.`
+      );
+      return of(null).pipe(delay(400)); // Bulunamadıysa null döndür
+    }
+  }
 }
