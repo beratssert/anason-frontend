@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { delay, map, catchError } from 'rxjs/operators';
 
-// Gerekirse interface'ler buraya veya ayrı bir dosyaya taşınabilir
+// Interface'ler (Gerekirse ayrı bir dosyaya taşınabilir)
 export interface AdminManagedUser {
   id: number;
   username?: string;
@@ -16,90 +16,9 @@ export interface AdminManagedUser {
   providedIn: 'root',
 })
 export class ProductService {
-  private mockProducts: any[] = [
-    {
-      id: 1,
-      seller_id: 101,
-      name: 'Smartwatch Pro X',
-      description:
-        'Latest generation smartwatch with advanced health tracking.',
-      price: 199.99,
-      stock_quantity: 50,
-      category: 'Electronics',
-      image_url: 'assets/images/placeholder.png',
-      created_at: new Date('2024-04-20'),
-    },
-    {
-      id: 2,
-      seller_id: 102,
-      name: 'Organic Cotton T-Shirt',
-      description:
-        'Comfortable and sustainable t-shirt made from 100% organic cotton.',
-      price: 25.5,
-      stock_quantity: 120,
-      category: 'Clothing',
-      image_url: 'assets/images/placeholder.png',
-      created_at: new Date('2024-04-15'),
-    },
-    {
-      id: 3,
-      seller_id: 101,
-      name: 'Wireless Noise-Cancelling Headphones',
-      description: 'Immersive sound experience with active noise cancellation.',
-      price: 149.0,
-      stock_quantity: 30,
-      category: 'Electronics',
-      image_url: 'assets/images/placeholder.png',
-      created_at: new Date('2024-04-10'),
-    },
-    {
-      id: 4,
-      seller_id: 103,
-      name: 'Ceramic Coffee Mug Set (Set of 4)',
-      description:
-        'Stylish and durable ceramic mugs, perfect for your morning coffee.',
-      price: 35.99,
-      stock_quantity: 80,
-      category: 'Home & Garden',
-      image_url: 'assets/images/placeholder.png',
-      created_at: new Date('2024-03-25'),
-    },
-    {
-      id: 5,
-      seller_id: 102,
-      name: 'Running Shoes - Model Runner',
-      description:
-        'Lightweight and breathable running shoes for optimal performance.',
-      price: 89.9,
-      stock_quantity: 0,
-      category: 'Shoes & Bags',
-      image_url: 'assets/images/placeholder.png',
-      created_at: new Date('2024-03-11'),
-    },
-    {
-      id: 6,
-      seller_id: 101,
-      name: 'Smartphone Holder Grip',
-      description: 'Secure phone grip and stand.',
-      price: 9.99,
-      stock_quantity: 200,
-      category: 'Electronics',
-      image_url: 'assets/images/placeholder.png',
-      created_at: new Date('2024-05-01'),
-    },
-    {
-      id: 7,
-      seller_id: 102,
-      name: 'Bamboo Cutting Board',
-      description: 'Eco-friendly and durable cutting board.',
-      price: 19.95,
-      stock_quantity: 65,
-      category: 'Home & Garden',
-      image_url: 'assets/images/placeholder.png',
-      created_at: new Date('2024-04-28'),
-    },
-  ];
+  private readonly PRODUCT_STORAGE_KEY = 'anason_mock_products';
 
+  // Mock data (Reviews, Attributes, Values şimdilik localStorage'a yazılmıyor)
   private mockReviews: any[] = [
     {
       id: 101,
@@ -157,7 +76,6 @@ export class ProductService {
       created_at: new Date('2024-04-28T08:00:00'),
     },
   ];
-
   private mockAttributes: any[] = [
     { id: 1, name: 'Color', data_type: 'STRING', category: 'Clothing' },
     { id: 2, name: 'Size', data_type: 'STRING', category: 'Clothing' },
@@ -193,7 +111,6 @@ export class ProductService {
       category: 'Shoes & Bags',
     },
   ];
-
   private mockAttributeValues: any[] = [
     { id: 201, product_id: 1, attribute_id: 4, value: '1.78' },
     { id: 202, product_id: 1, attribute_id: 5, value: '5 ATM' },
@@ -211,7 +128,130 @@ export class ProductService {
     { id: 214, product_id: 5, attribute_id: 8, value: 'Rubber' },
   ];
 
-  constructor() {}
+  // mockProducts artık constructor'da localStorage'dan yükleniyor
+  private mockProducts: any[];
+
+  constructor() {
+    this.mockProducts = this.loadProductsFromStorage();
+  }
+
+  private loadProductsFromStorage(): any[] {
+    if (typeof localStorage !== 'undefined') {
+      const storedProducts = localStorage.getItem(this.PRODUCT_STORAGE_KEY);
+      if (storedProducts) {
+        try {
+          const parsedProducts = JSON.parse(storedProducts);
+          if (Array.isArray(parsedProducts)) {
+            return parsedProducts.map((p) => ({
+              ...p,
+              created_at: p.created_at ? new Date(p.created_at) : undefined,
+            }));
+          } else {
+            localStorage.removeItem(this.PRODUCT_STORAGE_KEY);
+          }
+        } catch (e) {
+          console.error('Error parsing products from localStorage', e);
+          localStorage.removeItem(this.PRODUCT_STORAGE_KEY);
+        }
+      }
+    }
+    return this.getDefaultMockProducts();
+  }
+
+  private saveProductsToStorage(): void {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(
+          this.PRODUCT_STORAGE_KEY,
+          JSON.stringify(this.mockProducts)
+        );
+      } catch (e) {
+        console.error('Error saving products to localStorage', e);
+      }
+    }
+  }
+
+  private getDefaultMockProducts(): any[] {
+    return [
+      {
+        id: 1,
+        seller_id: 101,
+        name: 'Smartwatch Pro X',
+        description: 'Latest generation smartwatch...',
+        price: 199.99,
+        stock_quantity: 50,
+        category: 'Electronics',
+        image_url: 'assets/images/placeholder.png',
+        created_at: new Date('2024-04-20'),
+      },
+      {
+        id: 2,
+        seller_id: 102,
+        name: 'Organic Cotton T-Shirt',
+        description: 'Comfortable and sustainable t-shirt...',
+        price: 25.5,
+        stock_quantity: 120,
+        category: 'Clothing',
+        image_url: 'assets/images/placeholder.png',
+        created_at: new Date('2024-04-15'),
+      },
+      {
+        id: 3,
+        seller_id: 101,
+        name: 'Wireless Noise-Cancelling Headphones',
+        description: 'Immersive sound experience...',
+        price: 149.0,
+        stock_quantity: 30,
+        category: 'Electronics',
+        image_url: 'assets/images/placeholder.png',
+        created_at: new Date('2024-04-10'),
+      },
+      {
+        id: 4,
+        seller_id: 103,
+        name: 'Ceramic Coffee Mug Set (Set of 4)',
+        description: 'Stylish and durable ceramic mugs...',
+        price: 35.99,
+        stock_quantity: 80,
+        category: 'Home & Garden',
+        image_url: 'assets/images/placeholder.png',
+        created_at: new Date('2024-03-25'),
+      },
+      {
+        id: 5,
+        seller_id: 102,
+        name: 'Running Shoes - Model Runner',
+        description: 'Lightweight and breathable running shoes...',
+        price: 89.9,
+        stock_quantity: 0,
+        category: 'Shoes & Bags',
+        image_url: 'assets/images/placeholder.png',
+        created_at: new Date('2024-03-11'),
+      },
+      {
+        id: 6,
+        seller_id: 101,
+        name: 'Smartphone Holder Grip',
+        description: 'Secure phone grip and stand.',
+        price: 9.99,
+        stock_quantity: 200,
+        category: 'Electronics',
+        image_url: 'assets/images/placeholder.png',
+        created_at: new Date('2024-05-01'),
+      },
+      {
+        id: 7,
+        seller_id: 102,
+        name: 'Bamboo Cutting Board',
+        description: 'Eco-friendly and durable cutting board.',
+        price: 19.95,
+        stock_quantity: 65,
+        category: 'Home & Garden',
+        image_url: 'assets/images/placeholder.png',
+        created_at: new Date('2024-04-28'),
+      },
+    ];
+  }
 
   getProducts(): Observable<any[]> {
     return of(this.mockProducts).pipe(delay(100));
@@ -284,7 +324,7 @@ export class ProductService {
     const sellerProducts = this.mockProducts.filter(
       (p) => p.seller_id === sellerId
     );
-    return of(sellerProducts).pipe(delay(250));
+    return of(sellerProducts).pipe(delay(50));
   }
 
   deleteProduct(productId: number, sellerId: number): Observable<boolean> {
@@ -293,6 +333,7 @@ export class ProductService {
       (p) => !(p.id === productId && p.seller_id === sellerId)
     );
     if (this.mockProducts.length < initialLength) {
+      this.saveProductsToStorage();
       return of(true).pipe(delay(300));
     } else {
       return of(false).pipe(delay(300));
@@ -300,7 +341,10 @@ export class ProductService {
   }
 
   addProduct(productData: any, sellerId: number): Observable<any> {
-    const newId = Math.max(0, ...this.mockProducts.map((p) => p.id)) + 1;
+    const newId =
+      this.mockProducts.length > 0
+        ? Math.max(...this.mockProducts.map((p) => p.id)) + 1
+        : 1;
     const newProduct = {
       id: newId,
       seller_id: sellerId,
@@ -313,8 +357,7 @@ export class ProductService {
       created_at: new Date(),
     };
     this.mockProducts.push(newProduct);
-    console.log('Product added to mock list:', newProduct);
-    console.log('Updated mock products:', this.mockProducts);
+    this.saveProductsToStorage();
     return of(newProduct).pipe(delay(400));
   }
 
@@ -323,36 +366,25 @@ export class ProductService {
     productData: any,
     sellerId: number
   ): Observable<any | null> {
-    console.log(
-      `ProductService (Mock): Attempting to update product ${productId} for seller ${sellerId}`,
-      productData
-    );
     const productIndex = this.mockProducts.findIndex(
       (p) => p.id === productId && p.seller_id === sellerId
     );
-
     if (productIndex > -1) {
-      // Güncellenecek ürünü al ve yeni verilerle birleştir
+      const existingProduct = this.mockProducts[productIndex];
       const updatedProduct = {
-        ...this.mockProducts[productIndex], // Mevcut verileri koru (id, seller_id, created_at)
+        ...existingProduct,
         name: productData.name,
         description: productData.description,
         price: productData.price,
         stock_quantity: productData.stock_quantity,
         category: productData.category,
-        image_url:
-          productData.image_url || this.mockProducts[productIndex].image_url, // URL boşsa eskisini koru
-        // created_at güncellenmez, updated_at eklenebilir
+        image_url: productData.image_url || existingProduct.image_url,
       };
-      this.mockProducts[productIndex] = updatedProduct; // Dizideki ürünü güncelle
-      console.log('Product updated in mock list:', updatedProduct);
-      console.log('Updated mock products:', this.mockProducts);
-      return of(updatedProduct).pipe(delay(400)); // Güncellenmiş ürünü döndür
+      this.mockProducts[productIndex] = updatedProduct;
+      this.saveProductsToStorage();
+      return of(updatedProduct).pipe(delay(400));
     } else {
-      console.error(
-        `Product ${productId} not found or does not belong to seller ${sellerId}.`
-      );
-      return of(null).pipe(delay(400)); // Bulunamadıysa null döndür
+      return of(null).pipe(delay(400));
     }
   }
 }
