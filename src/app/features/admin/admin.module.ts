@@ -13,6 +13,7 @@ import { AdminComplaintDetailComponent } from './pages/admin-complaint-detail/ad
 import { SharedModule } from '../../shared/shared.module';
 import { AdminEditProductComponent } from './pages/admin-edit-product/admin-edit-product.component';
 import { AdminOrderDetailComponent } from './pages/admin-order-detail/admin-order-detail.component';
+import { AdminUserDetailComponent } from './pages/admin-user-detail/admin-user-detail.component';
 
 @NgModule({
   declarations: [
@@ -25,6 +26,7 @@ import { AdminOrderDetailComponent } from './pages/admin-order-detail/admin-orde
     AdminComplaintDetailComponent,
     AdminEditProductComponent,
     AdminOrderDetailComponent,
+    AdminUserDetailComponent,
   ],
   imports: [AdminRoutingModule, SharedModule],
 })

@@ -8,6 +8,7 @@ import { AdminComplaintManagementComponent } from './pages/admin-complaint-manag
 import { AdminComplaintDetailComponent } from './pages/admin-complaint-detail/admin-complaint-detail.component';
 import { AdminEditProductComponent } from './pages/admin-edit-product/admin-edit-product.component';
 import { AdminOrderDetailComponent } from './pages/admin-order-detail/admin-order-detail.component';
+import { AdminUserDetailComponent } from './pages/admin-user-detail/admin-user-detail.component';
 
 const routes: Routes = [
   { path: '', component: AdminDashboardComponent },
@@ -15,6 +16,7 @@ const routes: Routes = [
     path: 'users',
     component: UserManagementComponent,
   },
+  { path: 'users/:userId', component: AdminUserDetailComponent },
   { path: 'products', component: AdminProductManagementComponent },
   { path: 'products/:productId/edit', component: AdminEditProductComponent },
   { path: 'orders', component: AdminOrderManagementComponent },

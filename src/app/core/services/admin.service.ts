@@ -181,4 +181,40 @@ export class AdminService {
     console.log('Found complaint:', complaint);
     return of(complaint).pipe(delay(200)); // Bulunduysa veya undefined ise döndür
   }
+
+  getUserDetails(userId: number): Observable<AdminManagedUser | undefined> {
+    console.log(`AdminService (Mock): Fetching details for user ${userId}`);
+    // Gerçek uygulamada /api/admin/users/{userId} gibi bir endpoint çağrılır
+    const user = this.mockAdminUsers.find((u) => u.id === userId);
+    if (user) {
+      // Tarihi Date objesine çevir ve kopyasını döndür
+      return of({ ...user, created_at: new Date(user.created_at) }).pipe(
+        delay(150)
+      );
+    } else {
+      console.log(`User ${userId} not found.`);
+      return of(undefined).pipe(delay(150));
+    }
+  }
+
+  resetUserPassword(userId: number): Observable<boolean> {
+    console.log(
+      `AdminService (Mock): [ADMIN] Attempting to reset password for user ${userId}`
+    );
+    // Kullanıcının var olup olmadığını kontrol et (opsiyonel ama iyi pratik)
+    const userExists = this.mockAdminUsers.some((u) => u.id === userId);
+
+    if (userExists) {
+      // Gerçek uygulamada: Backend API çağrılır, email gönderilir vb.
+      console.log(
+        `Password reset triggered for user ${userId}. (No actual change in mock)`
+      );
+      // Başarıyı simüle et
+      return of(true).pipe(delay(500));
+    } else {
+      console.error(`[ADMIN] User ${userId} not found for password reset.`);
+      // Başarısızlığı simüle et
+      return of(false).pipe(delay(500));
+    }
+  }
 }

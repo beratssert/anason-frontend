@@ -1,0 +1,139 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-4">
+    <a routerLink="/admin/users" class="text-sm text-orange-600 hover:underline"
+      >&larr; Back to User List</a
+    >
+  </div>
+
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">User Details</h1>
+
+  <div *ngIf="isLoading" class="text-center py-10">Loading user details...</div>
+
+  <div
+    *ngIf="!isLoading && errorLoading"
+    class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6"
+    role="alert"
+  >
+    <strong class="font-bold">Error!</strong>
+    <span class="block sm:inline"> {{ errorLoading }}</span>
+  </div>
+
+  <div *ngIf="!isLoading && !errorLoading && user" class="space-y-6">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+          Account Information
+        </h3>
+      </div>
+      <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+        <dl class="sm:divide-y sm:divide-gray-200">
+          <div class="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">User ID</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              {{ user.id }}
+            </dd>
+          </div>
+          <div class="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Username</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              {{ user.username || "N/A" }}
+            </dd>
+          </div>
+          <div class="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Email address</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              {{ user.email }}
+            </dd>
+          </div>
+          <div class="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">User Role</dt>
+            <dd
+              class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 capitalize"
+            >
+              {{ user.role.toLowerCase() }}
+            </dd>
+          </div>
+          <div class="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Registered</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              {{ user.created_at | date : "medium" }}
+            </dd>
+          </div>
+          <div
+            class="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 items-center"
+          >
+            <dt class="text-sm font-medium text-gray-500">Account Actions</dt>
+            <dd
+              class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 space-x-2 flex items-center"
+            >
+              <button
+                *ngIf="user.status === 'ACTIVE'"
+                (click)="updateStatus('BANNED')"
+                [disabled]="updatingStatus || isResettingPassword"
+                type="button"
+                class="px-3 py-1 border border-red-600 rounded-md shadow-sm text-xs font-medium text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-wait"
+              >
+                Ban User
+              </button>
+              <button
+                *ngIf="user.status === 'BANNED'"
+                (click)="updateStatus('ACTIVE')"
+                [disabled]="updatingStatus || isResettingPassword"
+                type="button"
+                class="px-3 py-1 border border-green-600 rounded-md shadow-sm text-xs font-medium text-green-600 bg-white hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-wait"
+              >
+                Activate User
+              </button>
+
+              <button
+                type="button"
+                (click)="resetPassword()"
+                [disabled]="updatingStatus || isResettingPassword"
+                class="px-3 py-1 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-wait"
+              >
+                {{ isResettingPassword ? "Processing..." : "Reset Password" }}
+              </button>
+
+              <span
+                *ngIf="updatingStatus || isResettingPassword"
+                class="ml-2 text-xs text-gray-500 italic"
+                >Processing...</span
+              >
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mt-6">
+      <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+          User Addresses
+        </h3>
+      </div>
+      <div class="px-4 py-5 sm:p-6 text-sm text-gray-500">
+        (Address list placeholder - Requires Address Service)
+      </div>
+    </div>
+
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mt-6">
+      <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">User Orders</h3>
+      </div>
+      <div class="px-4 py-5 sm:p-6 text-sm text-gray-500">
+        (Order list placeholder - Requires Order Service call by user ID)
+      </div>
+    </div>
+
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mt-6">
+      <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+          User Transactions
+        </h3>
+      </div>
+      <div class="px-4 py-5 sm:p-6 text-sm text-gray-500">
+        (Transactions placeholder - Requires Payment/Transaction data)
+      </div>
+    </div>
+  </div>
+</div>
