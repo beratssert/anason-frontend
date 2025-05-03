@@ -88,26 +88,24 @@
         </ul>
       </div>
 
-      <div
-        class="px-4 py-3 sm:px-6 bg-gray-50 border-t border-gray-200 text-right space-x-3"
-      >
-        <button
-          type="button"
+      <div class="mt-4 pt-4 border-t text-right">
+        <a
+          [routerLink]="['./', order.id]"
           class="text-sm font-medium text-orange-600 hover:text-orange-500 focus:outline-none"
         >
           View Order Details
-        </button>
+        </a>
         <button
           *ngIf="order.status === 'DELIVERED'"
           type="button"
-          class="text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
+          class="ml-4 text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
         >
           Request Return
         </button>
         <button
           *ngIf="order.status === 'SHIPPED'"
           type="button"
-          class="text-sm font-medium text-green-600 hover:text-green-500 focus:outline-none"
+          class="ml-4 text-sm font-medium text-green-600 hover:text-green-500 focus:outline-none"
         >
           Track Package
         </button>
