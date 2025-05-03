@@ -10,6 +10,7 @@ import { SellerOrderManagementComponent } from './pages/seller-order-management/
 import { SellerOrderDetailComponent } from './pages/seller-order-detail/seller-order-detail.component';
 import { SharedModule } from '../../shared/shared.module';
 import { SellerReturnManagementComponent } from './pages/seller-return-management/seller-return-management.component';
+import { SellerProfileComponent } from './pages/seller-profile/seller-profile.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +22,7 @@ import { SellerReturnManagementComponent } from './pages/seller-return-managemen
     SellerOrderManagementComponent,
     SellerOrderDetailComponent,
     SellerReturnManagementComponent,
+    SellerProfileComponent,
   ],
   imports: [SellerRoutingModule, SharedModule],
 })

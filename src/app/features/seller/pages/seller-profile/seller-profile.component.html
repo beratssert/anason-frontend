@@ -1,0 +1,149 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">
+    Seller Profile & Settings
+  </h1>
+
+  <div *ngIf="isLoading" class="text-center py-10">Loading profile...</div>
+
+  <div
+    *ngIf="!isLoading && profileForm"
+    class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto"
+  >
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <div>
+        <label for="storeName" class="block text-sm font-medium text-gray-700"
+          >Store Name *</label
+        >
+        <input
+          type="text"
+          id="storeName"
+          formControlName="storeName"
+          required
+          class="mt-1 block w-full border rounded-md shadow-sm p-2"
+          [ngClass]="{
+            'border-red-500': storeName?.invalid && storeName?.touched,
+            'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+              storeName?.invalid && storeName?.touched
+            )
+          }"
+        />
+        <div
+          *ngIf="storeName?.invalid && (storeName?.dirty || storeName?.touched)"
+          class="mt-1 text-xs text-red-600"
+        >
+          <span *ngIf="storeName?.errors?.['required']"
+            >Store name is required.</span
+          >
+          <span *ngIf="storeName?.errors?.['minlength']"
+            >Must be at least 3 characters.</span
+          >
+        </div>
+      </div>
+
+      <div>
+        <label
+          for="storeDescription"
+          class="block text-sm font-medium text-gray-700"
+          >Store Description</label
+        >
+        <textarea
+          id="storeDescription"
+          formControlName="storeDescription"
+          rows="4"
+          placeholder="Tell customers about your store..."
+          class="mt-1 block w-full border rounded-md shadow-sm p-2 border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+        ></textarea>
+        <div
+          *ngIf="
+            storeDescription?.invalid &&
+            (storeDescription?.dirty || storeDescription?.touched)
+          "
+          class="mt-1 text-xs text-red-600"
+        >
+          <span *ngIf="storeDescription?.errors?.['maxlength']"
+            >Description cannot exceed 500 characters.</span
+          >
+        </div>
+      </div>
+
+      <div>
+        <label
+          for="contactEmail"
+          class="block text-sm font-medium text-gray-700"
+          >Contact Email *</label
+        >
+        <input
+          type="email"
+          id="contactEmail"
+          formControlName="contactEmail"
+          required
+          class="mt-1 block w-full border rounded-md shadow-sm p-2"
+          [ngClass]="{
+            'border-red-500': contactEmail?.invalid && contactEmail?.touched,
+            'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+              contactEmail?.invalid && contactEmail?.touched
+            )
+          }"
+        />
+        <div
+          *ngIf="
+            contactEmail?.invalid &&
+            (contactEmail?.dirty || contactEmail?.touched)
+          "
+          class="mt-1 text-xs text-red-600"
+        >
+          <span *ngIf="contactEmail?.errors?.['required']"
+            >Contact email is required.</span
+          >
+          <span *ngIf="contactEmail?.errors?.['email']"
+            >Please enter a valid email address.</span
+          >
+        </div>
+      </div>
+
+      <div>
+        <label for="phone" class="block text-sm font-medium text-gray-700"
+          >Contact Phone *</label
+        >
+        <input
+          type="tel"
+          id="phone"
+          formControlName="phone"
+          required
+          class="mt-1 block w-full border rounded-md shadow-sm p-2"
+          [ngClass]="{
+            'border-red-500': phone?.invalid && phone?.touched,
+            'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+              phone?.invalid && phone?.touched
+            )
+          }"
+        />
+        <div
+          *ngIf="phone?.invalid && (phone?.dirty || phone?.touched)"
+          class="mt-1 text-xs text-red-600"
+        >
+          <span *ngIf="phone?.errors?.['required']"
+            >Phone number is required.</span
+          >
+        </div>
+      </div>
+
+      <div class="pt-4 text-right">
+        <button
+          type="submit"
+          [disabled]="profileForm.invalid || isSaving"
+          class="py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-wait"
+        >
+          {{ isSaving ? "Saving..." : "Save Profile" }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div
+    *ngIf="!isLoading && !profileForm"
+    class="text-center py-10 text-red-500"
+  >
+    Could not load profile form.
+  </div>
+</div>
