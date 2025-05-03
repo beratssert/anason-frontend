@@ -9,6 +9,7 @@ import { MyProductsComponent } from './pages/my-products/my-products.component';
 import { ProductFormComponent } from './components/product-form/product-form.component';
 import { AddProductComponent } from './pages/add-product/add-product.component';
 import { EditProductComponent } from './pages/edit-product/edit-product.component';
+import { SellerOrderManagementComponent } from './pages/seller-order-management/seller-order-management.component';
 
 @NgModule({
   declarations: [
@@ -18,6 +19,7 @@ import { EditProductComponent } from './pages/edit-product/edit-product.componen
     ProductFormComponent,
     AddProductComponent,
     EditProductComponent,
+    SellerOrderManagementComponent,
   ],
   imports: [CommonModule, SellerRoutingModule, ReactiveFormsModule],
 })

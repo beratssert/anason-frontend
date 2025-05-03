@@ -7,8 +7,9 @@ export interface OrderItem {
   product_id: number;
   quantity: number;
   unit_price: number;
-  productName?: string; // Mock data convenience
-  imageUrl?: string; // Mock data convenience
+  productName?: string;
+  imageUrl?: string;
+  seller_id?: number; // Mock data için eklendi
 }
 
 export type OrderStatus =
@@ -33,7 +34,7 @@ export interface Order {
   providedIn: 'root',
 })
 export class OrderService {
-  // Mock Data
+  // Mock Data (OrderItem'larda seller_id ile güncellendi)
   private mockOrders: Order[] = [
     {
       id: 1001,
@@ -42,12 +43,14 @@ export class OrderService {
       total_price: 225.49,
       created_at: new Date('2024-04-25T11:00:00Z'),
       items: [
+        // Bu siparişte Seller ID 101 ve 102'den ürünler var
         {
           product_id: 1,
           quantity: 1,
           unit_price: 199.99,
           productName: 'Smartwatch Pro X',
           imageUrl: 'assets/images/placeholder.png',
+          seller_id: 101,
         },
         {
           product_id: 2,
@@ -55,6 +58,7 @@ export class OrderService {
           unit_price: 25.5,
           productName: 'Organic Cotton T-Shirt',
           imageUrl: 'assets/images/placeholder.png',
+          seller_id: 2,
         },
       ],
     },
@@ -65,12 +69,14 @@ export class OrderService {
       total_price: 149.0,
       created_at: new Date('2024-04-28T15:30:00Z'),
       items: [
+        // Bu siparişte Seller ID 101'den ürün var
         {
           product_id: 3,
           quantity: 1,
           unit_price: 149.0,
           productName: 'Wireless Noise-Cancelling Headphones',
           imageUrl: 'assets/images/placeholder.png',
+          seller_id: 101,
         },
       ],
     },
@@ -81,12 +87,14 @@ export class OrderService {
       total_price: 99.85,
       created_at: new Date('2024-05-01T09:10:00Z'),
       items: [
+        // Bu siparişte Seller ID 102, 103 ve 101'den ürünler var
         {
           product_id: 7,
           quantity: 2,
           unit_price: 19.95,
           productName: 'Bamboo Cutting Board',
           imageUrl: 'assets/images/placeholder.png',
+          seller_id: 102,
         },
         {
           product_id: 4,
@@ -94,6 +102,7 @@ export class OrderService {
           unit_price: 35.99,
           productName: 'Ceramic Coffee Mug Set (Set of 4)',
           imageUrl: 'assets/images/placeholder.png',
+          seller_id: 103,
         },
         {
           product_id: 6,
@@ -101,6 +110,7 @@ export class OrderService {
           unit_price: 9.99,
           productName: 'Smartphone Holder Grip',
           imageUrl: 'assets/images/placeholder.png',
+          seller_id: 101,
         },
       ],
     },
@@ -111,12 +121,67 @@ export class OrderService {
       total_price: 89.9,
       created_at: new Date('2024-03-15T12:00:00Z'),
       items: [
+        // Bu siparişte Seller ID 102'den ürün var
         {
           product_id: 5,
           quantity: 1,
           unit_price: 89.9,
           productName: 'Running Shoes - Model Runner',
           imageUrl: 'assets/images/placeholder.png',
+          seller_id: 102,
+        },
+      ],
+    },
+    // YENİ EKLEDİĞİMİZ VEYA GÜNCELLEDİĞİMİZ SİPARİŞLER (Seller ID 2 İÇEREN)
+    {
+      id: 1005,
+      user_id: 1,
+      status: 'PROCESSING',
+      total_price: 45.45,
+      created_at: new Date('2024-05-02T10:00:00Z'),
+      items: [
+        // Bu siparişte Seller ID 2'den (bizim satıcımız) ürün var
+        {
+          product_id: 2,
+          quantity: 1,
+          unit_price: 25.5,
+          productName: 'Organic Cotton T-Shirt',
+          imageUrl: 'assets/images/placeholder.png',
+          seller_id: 102,
+        }, // BU DEĞİŞTİ -> SELLER_ID 2 OLMALI
+        {
+          product_id: 7,
+          quantity: 1,
+          unit_price: 19.95,
+          productName: 'Bamboo Cutting Board',
+          imageUrl: 'assets/images/placeholder.png',
+          seller_id: 102,
+        }, // BU DEĞİŞTİ -> SELLER_ID 2 OLMALI
+      ],
+    },
+    {
+      id: 1006,
+      user_id: 3,
+      status: 'DELIVERED',
+      total_price: 109.85,
+      created_at: new Date('2024-04-30T18:00:00Z'),
+      items: [
+        // Bu siparişte Seller ID 2'den ve 101'den ürünler var
+        {
+          product_id: 5,
+          quantity: 1,
+          unit_price: 89.9,
+          productName: 'Running Shoes - Model Runner',
+          imageUrl: 'assets/images/placeholder.png',
+          seller_id: 102,
+        }, // BU DEĞİŞTİ -> SELLER_ID 2 OLMALI
+        {
+          product_id: 6,
+          quantity: 2,
+          unit_price: 9.99,
+          productName: 'Smartphone Holder Grip',
+          imageUrl: 'assets/images/placeholder.png',
+          seller_id: 101,
         },
       ],
     },
@@ -146,9 +211,11 @@ export class OrderService {
   }
 
   getOrderById(orderId: number, userId: number): Observable<Order | undefined> {
+    // userId kontrolü customer için geçerli, admin/seller farklı olabilir
     const order = this.mockOrders.find(
       (o) => o.id === orderId && o.user_id === userId
     );
+    // Admin/Seller için: const order = this.mockOrders.find(o => o.id === orderId);
     return of(order).pipe(delay(200));
   }
 
@@ -167,9 +234,26 @@ export class OrderService {
     const orderIndex = this.mockOrders.findIndex((o) => o.id === orderId);
     if (orderIndex > -1) {
       this.mockOrders[orderIndex].status = newStatus;
-      return of(this.mockOrders[orderIndex]).pipe(delay(250));
+      this.mockOrders[orderIndex].created_at = new Date(
+        this.mockOrders[orderIndex].created_at
+      ); // Tarihi koru/dönüştür
+      return of({ ...this.mockOrders[orderIndex] }).pipe(delay(250));
     } else {
       return of(null).pipe(delay(250));
     }
   }
+
+  getOrdersBySellerId(sellerId: number): Observable<Order[]> {
+    const sellerOrders = this.mockOrders.filter((order) =>
+      order.items.some((item) => item.seller_id === sellerId)
+    );
+    sellerOrders.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    return of(sellerOrders).pipe(delay(300));
+  }
+
+  // İleride eklenebilir:
+  // updateOrderStatusBySeller(orderId: number, newStatus: OrderStatus, sellerId: number): Observable<Order | null> { ... }
 }

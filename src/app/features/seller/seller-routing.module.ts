@@ -4,6 +4,7 @@ import { SellerDashboardComponent } from './pages/seller-dashboard/seller-dashbo
 import { MyProductsComponent } from './pages/my-products/my-products.component';
 import { EditProductComponent } from './pages/edit-product/edit-product.component';
 import { AddProductComponent } from './pages/add-product/add-product.component';
+import { SellerOrderManagementComponent } from './pages/seller-order-management/seller-order-management.component';
 
 const routes: Routes = [
   {
@@ -22,6 +23,7 @@ const routes: Routes = [
     path: 'edit-product/:id',
     component: EditProductComponent,
   },
+  { path: 'my-orders', component: SellerOrderManagementComponent },
 ];
 
 @NgModule({

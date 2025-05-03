@@ -1,0 +1,115 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">My Orders</h1>
+
+  <div *ngIf="isLoading" class="text-center py-10">Loading your orders...</div>
+
+  <div
+    *ngIf="!isLoading && myOrders.length === 0"
+    class="text-center py-10 text-gray-500 bg-white shadow rounded-lg p-6"
+  >
+    You have no orders containing your products yet.
+  </div>
+
+  <div *ngIf="!isLoading && myOrders.length > 0" class="space-y-6">
+    <div
+      *ngFor="let order of myOrders"
+      class="bg-white shadow overflow-hidden sm:rounded-lg"
+    >
+      <div class="px-4 py-4 sm:px-6 bg-gray-50 border-b border-gray-200">
+        <div
+          class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
+        >
+          <div class="flex-shrink-0 mb-2 sm:mb-0">
+            <h2
+              class="text-base sm:text-lg font-semibold text-gray-900 leading-tight"
+            >
+              Order #{{ order.id }}
+            </h2>
+            <p class="text-xs sm:text-sm text-gray-500">
+              Customer ID: {{ order.user_id }} | Placed on:
+              {{ order.created_at | date : "medium" }}
+            </p>
+          </div>
+          <div
+            class="flex flex-col items-start sm:items-end flex-shrink-0 w-full sm:w-auto"
+          >
+            <span
+              class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full whitespace-nowrap mb-1"
+              [ngClass]="{
+                'bg-yellow-100 text-yellow-800':
+                  order.status === 'PENDING' || order.status === 'PROCESSING',
+                'bg-blue-100 text-blue-800': order.status === 'SHIPPED',
+                'bg-green-100 text-green-800': order.status === 'DELIVERED',
+                'bg-red-100 text-red-800': order.status === 'CANCELLED',
+                'bg-purple-100 text-purple-800':
+                  order.status === 'RETURN_REQUESTED' ||
+                  order.status === 'RETURNED'
+              }"
+            >
+              {{ order.status }}
+            </span>
+            <p class="text-base sm:text-lg font-semibold text-gray-900">
+              Total: ${{ order.total_price | number : "1.2-2" }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-4 py-4 sm:px-6">
+        <h4 class="text-sm font-medium text-gray-600 mb-2">
+          Your Item(s) in this Order:
+        </h4>
+        <ul role="list" class="divide-y divide-gray-200 border rounded-md">
+          <li
+            *ngFor="let item of getSellerItems(order)"
+            class="p-3 flex items-center space-x-3"
+          >
+            <div
+              class="flex-shrink-0 h-10 w-10 rounded border bg-gray-100 p-0.5"
+            >
+              <img
+                class="h-full w-full object-contain"
+                [src]="item.imageUrl || 'assets/images/placeholder.png'"
+                [alt]="item.productName || 'Product Image'"
+              />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p
+                class="text-sm font-medium text-gray-800 truncate"
+                [title]="item.productName || 'Product ' + item.product_id"
+              >
+                {{ item.productName || "Product " + item.product_id }}
+              </p>
+              <p class="text-sm text-gray-500">Qty: {{ item.quantity }}</p>
+            </div>
+            <div
+              class="text-sm font-medium text-gray-700 flex-shrink-0 whitespace-nowrap"
+            >
+              ${{ item.unit_price * item.quantity | number : "1.2-2" }}
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div
+        class="px-4 py-3 sm:px-6 bg-gray-50 border-t border-gray-200 text-right space-x-3"
+      >
+        <button
+          *ngIf="order.status === 'PROCESSING'"
+          type="button"
+          (click)="updateStatus(order.id, 'SHIPPED')"
+          class="text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
+        >
+          Mark as Shipped
+        </button>
+        <button
+          type="button"
+          (click)="viewOrderDetails(order.id)"
+          class="text-sm font-medium text-orange-600 hover:text-orange-500 focus:outline-none"
+        >
+          View Order Details
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
