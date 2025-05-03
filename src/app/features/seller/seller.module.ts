@@ -11,6 +11,7 @@ import { SellerOrderDetailComponent } from './pages/seller-order-detail/seller-o
 import { SharedModule } from '../../shared/shared.module';
 import { SellerReturnManagementComponent } from './pages/seller-return-management/seller-return-management.component';
 import { SellerProfileComponent } from './pages/seller-profile/seller-profile.component';
+import { NgxChartsModule } from '@swimlane/ngx-charts';
 
 @NgModule({
   declarations: [
@@ -24,6 +25,6 @@ import { SellerProfileComponent } from './pages/seller-profile/seller-profile.co
     SellerReturnManagementComponent,
     SellerProfileComponent,
   ],
-  imports: [SellerRoutingModule, SharedModule],
+  imports: [SellerRoutingModule, SharedModule, NgxChartsModule],
 })
 export class SellerModule {}

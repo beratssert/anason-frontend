@@ -1,57 +1,144 @@
 <div class="container mx-auto px-4 py-8">
   <h1 class="text-3xl font-bold text-gray-800 mb-6">Seller Dashboard</h1>
 
-  <div class="bg-white p-6 rounded-lg shadow-md">
-    <p class="text-lg mb-4">Welcome, Seller!</p>
-    <p class="text-gray-600 mb-6">
-      Manage your products and orders from this panel.
-    </p>
+  <div *ngIf="isLoading" class="text-center py-10">
+    Loading dashboard data...
+  </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div class="border p-4 rounded hover:shadow-lg transition-shadow">
-        <h3 class="font-semibold text-lg mb-2">My Products</h3>
-        <p class="text-sm text-gray-500 mb-3">
-          View, add, or edit your products.
-        </p>
-        <a
-          routerLink="my-products"
-          class="text-orange-600 hover:underline text-sm font-medium"
-          >Go to Products</a
-        >
+  <div *ngIf="!isLoading && stats">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white p-4 rounded-lg shadow">
+        <div class="text-sm font-medium text-gray-500">My Products</div>
+        <div class="text-2xl font-bold text-gray-900 mt-1">
+          {{ stats.totalProducts }}
+        </div>
       </div>
-      <div class="border p-4 rounded hover:shadow-lg transition-shadow">
-        <h3 class="font-semibold text-lg mb-2">My Orders</h3>
-        <p class="text-sm text-gray-500 mb-3">
-          View and manage incoming orders.
-        </p>
-        <a
-          routerLink="my-orders"
-          class="text-orange-600 hover:underline text-sm font-medium"
-          >Go to Orders</a
-        >
+      <div class="bg-white p-4 rounded-lg shadow">
+        <div class="text-sm font-medium text-gray-500">
+          Total Orders (Related)
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mt-1">
+          {{ stats.totalOrders }}
+        </div>
       </div>
-      <div class="border p-4 rounded hover:shadow-lg transition-shadow">
-        <h3 class="font-semibold text-lg mb-2">Return Requests</h3>
-        <p class="text-sm text-gray-500 mb-3">
-          View and manage return requests.
-        </p>
-        <a
-          routerLink="returns"
-          class="text-orange-600 hover:underline text-sm font-medium"
-          >Go to Returns</a
-        >
+      <div class="bg-white p-4 rounded-lg shadow">
+        <div class="text-sm font-medium text-gray-500">Pending Orders</div>
+        <div class="text-2xl font-bold text-gray-900 mt-1">
+          {{ stats.pendingOrders }}
+        </div>
       </div>
-      <div class="border p-4 rounded hover:shadow-lg transition-shadow">
-        <h3 class="font-semibold text-lg mb-2">Seller Profile</h3>
-        <p class="text-sm text-gray-500 mb-3">
-          Manage your seller information.
-        </p>
-        <a
-          routerLink="profile"
-          class="text-orange-600 hover:underline text-sm font-medium"
-          >Edit Profile</a
-        >
+      <div class="bg-white p-4 rounded-lg shadow">
+        <div class="text-sm font-medium text-gray-500">
+          Approx. Total Revenue
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mt-1">
+          ${{ stats.totalRevenue | number : "1.2-2" }}
+        </div>
       </div>
     </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-3 text-gray-700">
+          My Related Orders by Status
+        </h3>
+        <ngx-charts-bar-vertical
+          [results]="orderStatusData"
+          [xAxis]="true"
+          [yAxis]="true"
+          [legend]="false"
+          [showXAxisLabel]="true"
+          [showYAxisLabel]="true"
+          xAxisLabel="Status"
+          yAxisLabel="Count"
+          [yAxisTicks]="orderStatusYAxisTicks"
+          [yScaleMin]="0"
+          [yAxisTickFormatting]="formatYAxisTick"
+          class="chart-container"
+        >
+        </ngx-charts-bar-vertical>
+      </div>
+
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-3 text-gray-700">
+          Top 5 Selling Products (by Quantity)
+        </h3>
+        <div
+          *ngIf="topSellingProductsData.length === 0"
+          class="text-center text-gray-500 py-8"
+        >
+          No completed sales data yet.
+        </div>
+        <ngx-charts-bar-vertical
+          *ngIf="topSellingProductsData.length > 0"
+          [results]="topSellingProductsData"
+          [xAxis]="true"
+          [yAxis]="true"
+          [legend]="false"
+          [showXAxisLabel]="true"
+          [showYAxisLabel]="true"
+          xAxisLabel="Product"
+          yAxisLabel="Quantity Sold"
+          [yAxisTickFormatting]="formatYAxisTick"
+          [yScaleMin]="0"
+          class="chart-container"
+        >
+        </ngx-charts-bar-vertical>
+      </div>
+    </div>
+
+    <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-4">Management Sections</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="border p-4 rounded hover:shadow-lg transition-shadow">
+          <h3 class="font-semibold text-lg mb-2">My Products</h3>
+          <p class="text-sm text-gray-500 mb-3">
+            View, add, or edit your products.
+          </p>
+          <a
+            routerLink="my-products"
+            class="text-orange-600 hover:underline text-sm font-medium"
+            >Go to Products</a
+          >
+        </div>
+        <div class="border p-4 rounded hover:shadow-lg transition-shadow">
+          <h3 class="font-semibold text-lg mb-2">My Orders</h3>
+          <p class="text-sm text-gray-500 mb-3">
+            View and manage incoming orders.
+          </p>
+          <a
+            routerLink="my-orders"
+            class="text-orange-600 hover:underline text-sm font-medium"
+            >Go to Orders</a
+          >
+        </div>
+        <div class="border p-4 rounded hover:shadow-lg transition-shadow">
+          <h3 class="font-semibold text-lg mb-2">Return Requests</h3>
+          <p class="text-sm text-gray-500 mb-3">
+            View and manage return requests.
+          </p>
+          <a
+            routerLink="returns"
+            class="text-orange-600 hover:underline text-sm font-medium"
+            >Go to Returns</a
+          >
+        </div>
+        <div class="border p-4 rounded hover:shadow-lg transition-shadow">
+          <h3 class="font-semibold text-lg mb-2">Seller Profile</h3>
+          <p class="text-sm text-gray-500 mb-3">
+            Manage your seller information.
+          </p>
+          <a
+            routerLink="settings"
+            class="text-orange-600 hover:underline text-sm font-medium"
+            >Edit Profile</a
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && !stats" class="text-center py-10 text-red-500">
+    Failed to load dashboard data.
   </div>
 </div>
