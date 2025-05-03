@@ -14,6 +14,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { AdminEditProductComponent } from './pages/admin-edit-product/admin-edit-product.component';
 import { AdminOrderDetailComponent } from './pages/admin-order-detail/admin-order-detail.component';
 import { AdminUserDetailComponent } from './pages/admin-user-detail/admin-user-detail.component';
+import { NgxChartsModule } from '@swimlane/ngx-charts';
 
 @NgModule({
   declarations: [
@@ -28,6 +29,6 @@ import { AdminUserDetailComponent } from './pages/admin-user-detail/admin-user-d
     AdminOrderDetailComponent,
     AdminUserDetailComponent,
   ],
-  imports: [AdminRoutingModule, SharedModule],
+  imports: [AdminRoutingModule, SharedModule, NgxChartsModule],
 })
 export class AdminModule {}

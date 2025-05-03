@@ -1,55 +1,194 @@
 <div class="container mx-auto px-4 py-8">
   <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
 
-  <div class="bg-white p-6 rounded-lg shadow-md">
-    <p class="text-lg mb-4">Welcome, Admin!</p>
-    <p class="text-gray-600 mb-6">
-      Manage users, products, orders, and more from here.
-    </p>
+  <div *ngIf="isLoading" class="text-center py-10">
+    Loading dashboard data...
+  </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div class="border p-4 rounded hover:shadow-lg transition-shadow">
-        <h3 class="font-semibold text-lg mb-2">User Management</h3>
-        <p class="text-sm text-gray-500 mb-3">
-          View, ban, or manage user roles.
-        </p>
-        <a
-          routerLink="users"
-          class="text-orange-600 hover:underline text-sm font-medium"
-          >Go to Users</a
+  <div *ngIf="!isLoading && stats">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div
+        class="bg-white p-4 rounded-lg shadow flex items-center justify-between"
+      >
+        <div>
+          <div class="text-sm font-medium text-gray-500">Total Users</div>
+          <div class="text-2xl font-bold text-gray-900">
+            {{ stats.totalUsers }}
+          </div>
+        </div>
+        <svg
+          class="w-8 h-8 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
         >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M12 7a4 4 0 11-8 0 4 4 0 018 0z"
+          ></path>
+        </svg>
       </div>
-      <div class="border p-4 rounded hover:shadow-lg transition-shadow">
-        <h3 class="font-semibold text-lg mb-2">Product Management</h3>
-        <p class="text-sm text-gray-500 mb-3">
-          Manage categories and products.
-        </p>
-        <a
-          routerLink="products"
-          class="text-orange-600 hover:underline text-sm font-medium"
-          >Go to Products</a
+      <div
+        class="bg-white p-4 rounded-lg shadow flex items-center justify-between"
+      >
+        <div>
+          <div class="text-sm font-medium text-gray-500">Total Products</div>
+          <div class="text-2xl font-bold text-gray-900">
+            {{ stats.totalProducts }}
+          </div>
+        </div>
+        <svg
+          class="w-8 h-8 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
         >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+          ></path>
+        </svg>
       </div>
-      <div class="border p-4 rounded hover:shadow-lg transition-shadow">
-        <h3 class="font-semibold text-lg mb-2">Order Management</h3>
-        <p class="text-sm text-gray-500 mb-3">
-          View and manage customer orders.
-        </p>
-        <a
-          routerLink="orders"
-          class="text-orange-600 hover:underline text-sm font-medium"
-          >Go to Orders</a
+      <div
+        class="bg-white p-4 rounded-lg shadow flex items-center justify-between"
+      >
+        <div>
+          <div class="text-sm font-medium text-gray-500">Total Orders</div>
+          <div class="text-2xl font-bold text-gray-900">
+            {{ stats.totalOrders }}
+          </div>
+        </div>
+        <svg
+          class="w-8 h-8 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
         >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+          ></path>
+        </svg>
       </div>
-      <div class="border p-4 rounded hover:shadow-lg transition-shadow">
-        <h3 class="font-semibold text-lg mb-2">Complaints</h3>
-        <p class="text-sm text-gray-500 mb-3">Address customer complaints.</p>
-        <a
-          routerLink="complaints"
-          class="text-orange-600 hover:underline text-sm font-medium"
-          >Go to Complaints</a
+      <div
+        class="bg-white p-4 rounded-lg shadow flex items-center justify-between"
+      >
+        <div>
+          <div class="text-sm font-medium text-gray-500">Total Complaints</div>
+          <div class="text-2xl font-bold text-gray-900">
+            {{ stats.totalComplaints }}
+          </div>
+        </div>
+        <svg
+          class="w-8 h-8 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
         >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+          ></path>
+        </svg>
       </div>
     </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-3 text-gray-700">Users by Role</h3>
+        <ngx-charts-pie-chart
+          [results]="userRoleData"
+          [labels]="true"
+          [doughnut]="false"
+          class="chart-container"
+        >
+        </ngx-charts-pie-chart>
+      </div>
+
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-3 text-gray-700">
+          Orders by Status
+        </h3>
+        <ngx-charts-bar-vertical
+          [results]="orderStatusData"
+          [xAxis]="true"
+          [yAxis]="true"
+          [legend]="false"
+          [showXAxisLabel]="true"
+          [showYAxisLabel]="true"
+          xAxisLabel="Status"
+          yAxisLabel="Count"
+          [yAxisTicks]="orderStatusYAxisTicks"
+          [yScaleMin]="0"
+          [yAxisTickFormatting]="formatYAxisTick"
+          class="chart-container"
+        >
+        </ngx-charts-bar-vertical>
+      </div>
+    </div>
+
+    <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-4">Management Sections</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="border p-4 rounded hover:shadow-lg transition-shadow">
+          <h3 class="font-semibold text-lg mb-2">User Management</h3>
+          <p class="text-sm text-gray-500 mb-3">
+            View, ban, or manage user roles.
+          </p>
+          <a
+            routerLink="users"
+            class="text-orange-600 hover:underline text-sm font-medium"
+            >Go to Users</a
+          >
+        </div>
+        <div class="border p-4 rounded hover:shadow-lg transition-shadow">
+          <h3 class="font-semibold text-lg mb-2">Product Management</h3>
+          <p class="text-sm text-gray-500 mb-3">
+            Manage categories and products.
+          </p>
+          <a
+            routerLink="products"
+            class="text-orange-600 hover:underline text-sm font-medium"
+            >Go to Products</a
+          >
+        </div>
+        <div class="border p-4 rounded hover:shadow-lg transition-shadow">
+          <h3 class="font-semibold text-lg mb-2">Order Management</h3>
+          <p class="text-sm text-gray-500 mb-3">
+            View and manage customer orders.
+          </p>
+          <a
+            routerLink="orders"
+            class="text-orange-600 hover:underline text-sm font-medium"
+            >Go to Orders</a
+          >
+        </div>
+        <div class="border p-4 rounded hover:shadow-lg transition-shadow">
+          <h3 class="font-semibold text-lg mb-2">Complaints</h3>
+          <p class="text-sm text-gray-500 mb-3">Address customer complaints.</p>
+          <a
+            routerLink="complaints"
+            class="text-orange-600 hover:underline text-sm font-medium"
+            >Go to Complaints</a
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && !stats" class="text-center py-10 text-red-500">
+    Failed to load dashboard data.
   </div>
 </div>
