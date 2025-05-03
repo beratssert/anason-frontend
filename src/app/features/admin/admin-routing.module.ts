@@ -7,6 +7,7 @@ import { AdminOrderManagementComponent } from './pages/admin-order-management/ad
 import { AdminComplaintManagementComponent } from './pages/admin-complaint-management/admin-complaint-management.component';
 import { AdminComplaintDetailComponent } from './pages/admin-complaint-detail/admin-complaint-detail.component';
 import { AdminEditProductComponent } from './pages/admin-edit-product/admin-edit-product.component';
+import { AdminOrderDetailComponent } from './pages/admin-order-detail/admin-order-detail.component';
 
 const routes: Routes = [
   { path: '', component: AdminDashboardComponent },
@@ -17,6 +18,7 @@ const routes: Routes = [
   { path: 'products', component: AdminProductManagementComponent },
   { path: 'products/:productId/edit', component: AdminEditProductComponent },
   { path: 'orders', component: AdminOrderManagementComponent },
+  { path: 'orders/:orderId', component: AdminOrderDetailComponent },
   { path: 'complaints', component: AdminComplaintManagementComponent },
   { path: 'complaints/:complaintId', component: AdminComplaintDetailComponent },
 ];

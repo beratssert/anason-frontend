@@ -407,4 +407,19 @@ export class OrderService {
       return of(null).pipe(delay(100));
     }
   }
+
+  getOrderByIdForAdmin(orderId: number): Observable<Order | undefined> {
+    console.log(
+      `OrderService (Mock): [ADMIN] Fetching order details for Order ID: ${orderId}`
+    );
+    // Gerçek uygulamada API çağrısı /api/admin/orders/{orderId} gibi bir endpoint'e yapılır
+    const order = this.mockOrders.find((o) => o.id === orderId);
+    if (!order) {
+      console.log(`[ADMIN] Order ${orderId} not found.`);
+    }
+    // Tarihi Date objesine çevir ve kopyasını döndür
+    return of(
+      order ? { ...order, created_at: new Date(order.created_at) } : undefined
+    ).pipe(delay(200));
+  }
 }

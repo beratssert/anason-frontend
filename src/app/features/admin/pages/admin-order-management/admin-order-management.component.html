@@ -108,13 +108,12 @@
               </select>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <button
-                type="button"
-                (click)="viewOrderDetails(order.id)"
+              <a
+                [routerLink]="['../orders', order.id]"
                 class="text-indigo-600 hover:text-indigo-900"
               >
                 Details
-              </button>
+              </a>
             </td>
           </tr>
         </tbody>
