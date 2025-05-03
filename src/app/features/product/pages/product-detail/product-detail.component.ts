@@ -6,6 +6,7 @@ import { CartService } from '../../../../core/services/cart.service';
 import { ToastrService } from 'ngx-toastr'; // ToastrService import edildi
 import { Observable, of, forkJoin } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
+import { ComparisonService } from '../../../../core/services/comparison.service';
 
 @Component({
   selector: 'app-product-detail',
@@ -28,7 +29,8 @@ export class ProductDetailComponent implements OnInit {
     private productService: ProductService,
     private fb: FormBuilder,
     private cartService: CartService,
-    private toastr: ToastrService // ToastrService inject edildi
+    private toastr: ToastrService,
+    private comparisonService: ComparisonService
   ) {}
 
   ngOnInit(): void {
@@ -143,7 +145,6 @@ export class ProductDetailComponent implements OnInit {
     }
   }
 
-  // Sepete ekleme metodu GÜNCELLENDİ (alert yerine toastr)
   addToCart(): void {
     if (this.product && this.product.stock_quantity > 0 && this.quantity > 0) {
       this.cartService.addItem(this.product, this.quantity);
@@ -157,6 +158,23 @@ export class ProductDetailComponent implements OnInit {
       this.toastr.error(
         'Cannot add this item to cart. Check stock or quantity.',
         'Error'
+      );
+    }
+  }
+
+  addToCompare(): void {
+    if (!this.product) return; // Ürün yüklenmemişse çık
+
+    const success = this.comparisonService.addToCompare(this.product.id);
+    if (success) {
+      this.toastr.success(
+        `${this.product.name} added to comparison list.`,
+        'Compare'
+      );
+    } else {
+      this.toastr.info(
+        `Could not add ${this.product.name}. Check if it's already added or if the list is full (max 4).`,
+        'Compare'
       );
     }
   }

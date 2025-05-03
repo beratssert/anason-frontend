@@ -4,6 +4,7 @@ import { ProductService } from '../../services/product.service';
 import { CartService } from '../../../../core/services/cart.service';
 import { ToastrService } from 'ngx-toastr';
 import { forkJoin, Subscription } from 'rxjs';
+import { ComparisonService } from '../../../../core/services/comparison.service';
 
 @Component({
   selector: 'app-product-list',
@@ -35,7 +36,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
     private productService: ProductService,
     private cartService: CartService,
     private toastr: ToastrService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private comparisonService: ComparisonService
   ) {}
 
   ngOnInit(): void {
@@ -157,5 +159,21 @@ export class ProductListComponent implements OnInit, OnDestroy {
   addToCart(product: any): void {
     this.cartService.addItem(product, 1);
     this.toastr.success(`${product.name} added to cart!`, 'Success');
+  }
+
+  addToCompare(productId: number, productName: string): void {
+    const success = this.comparisonService.addToCompare(productId);
+    if (success) {
+      this.toastr.success(
+        `${productName} added to comparison list.`,
+        'Compare'
+      );
+    } else {
+      // Limit dolu veya ürün zaten ekli olabilir (Servis log basıyor)
+      this.toastr.info(
+        `Could not add ${productName}. Check if it's already added or if the list is full (max 4).`,
+        'Compare'
+      );
+    }
   }
 }
