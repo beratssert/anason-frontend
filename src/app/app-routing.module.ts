@@ -71,6 +71,7 @@ const routes: Routes = [
       ),
     canActivate: [authGuard],
   },
+  { path: 'compare', loadChildren: () => import('./features/compare/compare.module').then(m => m.CompareModule) },
   // { path: '**', component: NotFoundComponent } // 404 sayfası eklenebilir
 ];
 

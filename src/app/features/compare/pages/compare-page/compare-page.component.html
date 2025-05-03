@@ -1,0 +1,156 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Compare Products</h1>
+
+  <div *ngIf="isLoading" class="text-center py-10">
+    Loading comparison data...
+  </div>
+
+  <div
+    *ngIf="!isLoading && errorLoading"
+    class="text-center py-10 text-red-500"
+  >
+    {{ errorLoading }}
+  </div>
+
+  <div
+    *ngIf="!isLoading && !errorLoading && comparedProducts.length === 0"
+    class="text-center py-10 text-gray-500 bg-white shadow rounded-lg p-6"
+  >
+    <p class="mb-4">There are no products in your comparison list.</p>
+    <a
+      routerLink="/products"
+      class="text-orange-600 hover:underline font-medium"
+      >Browse Products</a
+    >
+  </div>
+
+  <div
+    *ngIf="!isLoading && !errorLoading && comparedProducts.length > 0"
+    class="bg-white shadow overflow-hidden sm:rounded-lg"
+  >
+    <div class="overflow-x-auto">
+      <div
+        class="grid gap-px"
+        [style.grid-template-columns]="
+          'repeat(' + (comparedProducts.length + 1) + ', minmax(140px, 1fr))'
+        "
+      >
+        <div
+          class="bg-gray-50 p-3 font-semibold text-sm text-gray-600 sticky top-0 z-10"
+        >
+          <button
+            (click)="clearCompare()"
+            title="Clear All"
+            class="float-right text-xs text-red-500 hover:underline focus:outline-none"
+          >
+            Clear All
+          </button>
+          Features
+        </div>
+        <div
+          *ngFor="let product of comparedProducts"
+          class="bg-gray-50 p-3 text-center sticky top-0 z-10 border-l"
+        >
+          <button
+            (click)="removeFromCompare(product.id)"
+            title="Remove from Compare"
+            class="float-right text-xs text-red-500 hover:underline focus:outline-none -mt-1"
+          >
+            Remove
+          </button>
+          <a
+            [routerLink]="['/products', product.id]"
+            class="font-semibold text-sm text-gray-800 hover:text-orange-600 block truncate"
+            [title]="product.name"
+          >
+            {{ product.name }}
+          </a>
+        </div>
+
+        <div class="bg-white p-3 font-medium text-sm text-gray-500 border-t">
+          Image
+        </div>
+        <div
+          *ngFor="let product of comparedProducts"
+          class="bg-white p-3 text-center border-t border-l"
+        >
+          <img
+            [src]="product.image_url || 'assets/images/placeholder.png'"
+            [alt]="product.name"
+            class="h-24 w-24 object-contain inline-block"
+          />
+        </div>
+
+        <div class="bg-gray-50 p-3 font-medium text-sm text-gray-500 border-t">
+          Price
+        </div>
+        <div
+          *ngFor="let product of comparedProducts"
+          class="bg-gray-50 p-3 text-center border-t border-l"
+        >
+          <span class="text-lg font-semibold text-orange-600"
+            >${{ product.price | number : "1.2-2" }}</span
+          >
+        </div>
+
+        <div class="bg-white p-3 font-medium text-sm text-gray-500 border-t">
+          Category
+        </div>
+        <div
+          *ngFor="let product of comparedProducts"
+          class="bg-white p-3 text-center border-t border-l text-sm text-gray-700"
+        >
+          {{ product.category }}
+        </div>
+
+        <div class="bg-gray-50 p-3 font-medium text-sm text-gray-500 border-t">
+          Stock
+        </div>
+        <div
+          *ngFor="let product of comparedProducts"
+          class="bg-gray-50 p-3 text-center border-t border-l text-sm"
+          [ngClass]="{
+            'text-green-600': product.stock_quantity > 0,
+            'text-red-600': product.stock_quantity <= 0
+          }"
+        >
+          {{
+            product.stock_quantity > 0
+              ? product.stock_quantity + " in stock"
+              : "Out of stock"
+          }}
+        </div>
+
+        <ng-container
+          *ngFor="let attrName of allAttributeNames; let isEven = even"
+        >
+          <div
+            class="p-3 font-medium text-sm text-gray-500 border-t"
+            [class.bg-white]="isEven"
+            [class.bg-gray-50]="!isEven"
+          >
+            {{ attrName }}
+          </div>
+          <div
+            *ngFor="let product of comparedProducts"
+            class="p-3 text-center border-t border-l text-sm text-gray-700"
+            [class.bg-white]="isEven"
+            [class.bg-gray-50]="!isEven"
+          >
+            {{ getAttributeValue(product, attrName) }}
+          </div>
+        </ng-container>
+
+        <div class="bg-white p-3 font-medium text-sm text-gray-500 border-t">
+          Actions
+        </div>
+        <div
+          *ngFor="let product of comparedProducts"
+          class="bg-white p-3 text-center border-t border-l"
+        >
+          <button type="button" class="text-xs ...">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

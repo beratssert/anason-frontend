@@ -4,6 +4,7 @@ import { Router } from '@angular/router'; // Router import et
 import { CartService } from '../services/cart.service';
 import { AuthService } from '../services/auth.service';
 import { Observable } from 'rxjs';
+import { ComparisonService } from '../services/comparison.service';
 
 @Component({
   selector: 'app-header',
@@ -16,13 +17,16 @@ export class HeaderComponent implements OnInit {
   isLoggedIn$: Observable<boolean>;
   searchTerm: string = '';
   isMobileMenuOpen: boolean = false;
+  compareCount$: Observable<number>;
 
   constructor(
     private cartService: CartService,
     private authService: AuthService,
+    private comparisonService: ComparisonService,
     private router: Router
   ) {
     this.itemCount$ = this.cartService.itemCount$;
+    this.compareCount$ = this.comparisonService.compareCount$;
     this.isLoggedIn$ = this.authService.isLoggedIn$;
   }
 

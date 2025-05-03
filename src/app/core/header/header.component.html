@@ -173,6 +173,34 @@
           </button>
         </ng-container>
         <a
+          routerLink="/compare"
+          class="relative flex items-center space-x-1 hover:text-orange-500"
+          title="Compare Products"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m0 0l-3 9a5.002 5.002 0 01-6.001 0M18 7l-3 9m-3-9l-6 2"
+            />
+          </svg>
+          <span class="text-sm hidden lg:inline">Compare</span>
+          <span
+            *ngIf="compareCount$ | async as count"
+            [hidden]="count === 0"
+            class="absolute -top-2 -left-2 bg-blue-500 text-white text-xs font-semibold rounded-full px-1.5 py-0.5 min-w-[18px] text-center"
+          >
+            {{ count }}
+          </span>
+        </a>
+        <a
           routerLink="/cart"
           class="relative flex items-center space-x-1 hover:text-orange-500"
         >
