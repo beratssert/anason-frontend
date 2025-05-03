@@ -404,4 +404,35 @@ export class ProductService {
       return of(null).pipe(delay(400));
     }
   }
+
+  updateProductAsAdmin(
+    productId: number,
+    productData: any
+  ): Observable<any | null> {
+    console.log(
+      `ProductService (Mock): [ADMIN] Attempting to update product ${productId}`,
+      productData
+    );
+    const productIndex = this.mockProducts.findIndex((p) => p.id === productId); // Sadece ID ile bul
+
+    if (productIndex > -1) {
+      const existingProduct = this.mockProducts[productIndex];
+      const updatedProduct = {
+        ...existingProduct, // Mevcut verileri koru (id, seller_id, created_at)
+        name: productData.name,
+        description: productData.description,
+        price: productData.price,
+        stock_quantity: productData.stock_quantity,
+        category: productData.category,
+        image_url: productData.image_url || existingProduct.image_url,
+      };
+      this.mockProducts[productIndex] = updatedProduct;
+      this.saveProductsToStorage(); // localStorage'a kaydet
+      console.log('[ADMIN] Product updated in mock list:', updatedProduct);
+      return of(updatedProduct).pipe(delay(400));
+    } else {
+      console.error(`[ADMIN] Product ${productId} not found for update.`);
+      return of(null).pipe(delay(400));
+    }
+  }
 }

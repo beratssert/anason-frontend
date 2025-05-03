@@ -10,6 +10,8 @@ import { AdminProductManagementComponent } from './pages/admin-product-managemen
 import { AdminOrderManagementComponent } from './pages/admin-order-management/admin-order-management.component';
 import { AdminComplaintManagementComponent } from './pages/admin-complaint-management/admin-complaint-management.component';
 import { AdminComplaintDetailComponent } from './pages/admin-complaint-detail/admin-complaint-detail.component';
+import { SharedModule } from '../../shared/shared.module';
+import { AdminEditProductComponent } from './pages/admin-edit-product/admin-edit-product.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +22,8 @@ import { AdminComplaintDetailComponent } from './pages/admin-complaint-detail/ad
     AdminOrderManagementComponent,
     AdminComplaintManagementComponent,
     AdminComplaintDetailComponent,
+    AdminEditProductComponent,
   ],
-  imports: [CommonModule, AdminRoutingModule, FormsModule, ReactiveFormsModule],
+  imports: [AdminRoutingModule, SharedModule],
 })
 export class AdminModule {}

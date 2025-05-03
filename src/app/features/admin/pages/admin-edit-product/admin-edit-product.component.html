@@ -1,0 +1,36 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin - Edit Product</h1>
+
+  <div *ngIf="isLoading" class="text-center py-10">Loading product data...</div>
+
+  <div
+    *ngIf="!isLoading && errorLoading"
+    class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6"
+    role="alert"
+  >
+    <strong class="font-bold">Error!</strong>
+    <span class="block sm:inline"> {{ errorLoading }}</span>
+  </div>
+
+  <div
+    *ngIf="!isLoading && !errorLoading && productToEdit"
+    class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto"
+  >
+    <app-product-form
+      [productData]="productToEdit"
+      [isLoading]="isUpdating"
+      (formSubmit)="handleProductUpdate($event)"
+      (formCancel)="handleCancel()"
+    >
+    </app-product-form>
+  </div>
+  <div
+    *ngIf="!isLoading && !errorLoading && !productToEdit"
+    class="text-center py-10 text-gray-500"
+  >
+    Product could not be loaded or found.
+    <a routerLink="/admin/products" class="text-orange-600 hover:underline"
+      >Go back to list</a
+    >.
+  </div>
+</div>
