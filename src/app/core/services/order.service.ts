@@ -64,7 +64,7 @@ export class OrderService {
     },
     {
       id: 1002,
-      user_id: 2,
+      user_id: 1,
       status: 'SHIPPED',
       total_price: 149.0,
       created_at: new Date('2024-04-28T15:30:00Z'),
@@ -352,5 +352,50 @@ export class OrderService {
       ...this.mockOrders[orderIndex],
       created_at: new Date(this.mockOrders[orderIndex].created_at),
     }).pipe(delay(250));
+  }
+
+  cancelOrder(orderId: number, userId: number): Observable<Order | null> {
+    console.log(
+      `OrderService (Mock): Attempting to cancel order ${orderId} for user ${userId}`
+    );
+    const orderIndex = this.mockOrders.findIndex(
+      (o) => o.id === orderId && o.user_id === userId
+    );
+
+    if (orderIndex === -1) {
+      console.error(
+        `Order ${orderId} not found or does not belong to user ${userId}.`
+      );
+      return of(null).pipe(delay(100)); // Sipariş bulunamadı veya kullanıcıya ait değil
+    }
+
+    const order = this.mockOrders[orderIndex];
+
+    // İptal etme koşulunu kontrol et (örneğin sadece PENDING veya PROCESSING durumundayken)
+    if (order.status !== 'PENDING' && order.status !== 'PROCESSING') {
+      console.warn(
+        `Order ${orderId} cannot be cancelled because its status is ${order.status}.`
+      );
+      // Hata fırlatmak, component tarafında yakalamak için daha iyi olabilir
+      return throwError(
+        () => new Error(`Order cannot be cancelled in ${order.status} status.`)
+      ).pipe(delay(100));
+      // Veya sadece null döndür: return of(null).pipe(delay(100));
+    }
+
+    // Durumu CANCELLED yap
+    this.mockOrders[orderIndex].status = 'CANCELLED';
+    console.log(
+      'Order status updated to CANCELLED in mock list:',
+      this.mockOrders[orderIndex]
+    );
+
+    // Güncellenmiş siparişi döndür
+    // Tarih objesini koruduğumuzdan emin olalım
+    const updatedOrder = {
+      ...this.mockOrders[orderIndex],
+      created_at: new Date(this.mockOrders[orderIndex].created_at),
+    };
+    return of(updatedOrder).pipe(delay(300));
   }
 }
