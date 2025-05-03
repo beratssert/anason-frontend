@@ -9,6 +9,7 @@ import { EditProductComponent } from './pages/edit-product/edit-product.componen
 import { SellerOrderManagementComponent } from './pages/seller-order-management/seller-order-management.component';
 import { SellerOrderDetailComponent } from './pages/seller-order-detail/seller-order-detail.component';
 import { SharedModule } from '../../shared/shared.module';
+import { SellerReturnManagementComponent } from './pages/seller-return-management/seller-return-management.component';
 
 @NgModule({
   declarations: [
@@ -19,6 +20,7 @@ import { SharedModule } from '../../shared/shared.module';
     EditProductComponent,
     SellerOrderManagementComponent,
     SellerOrderDetailComponent,
+    SellerReturnManagementComponent,
   ],
   imports: [SellerRoutingModule, SharedModule],
 })

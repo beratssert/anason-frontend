@@ -41,13 +41,14 @@ export interface TrackingInfo {
 })
 export class OrderService {
   // Mock Data
+  // Mock Sipariş Verileri (İade durumları ve Seller ID 2 içeren siparişler eklendi)
   private mockOrders: Order[] = [
     {
       id: 1001,
       user_id: 1,
       status: 'DELIVERED',
       total_price: 225.49,
-      created_at: new Date('2024-04-25T11:00:00Z'),
+      created_at: '2024-04-25T11:00:00Z',
       items: [
         {
           product_id: 1,
@@ -64,15 +65,15 @@ export class OrderService {
           productName: 'Organic Cotton T-Shirt',
           imageUrl: 'assets/images/placeholder.png',
           seller_id: 2,
-        },
+        }, // Seller 2 ürünü
       ],
     },
     {
       id: 1002,
-      user_id: 1,
+      user_id: 2,
       status: 'SHIPPED',
       total_price: 149.0,
-      created_at: new Date('2024-04-28T15:30:00Z'),
+      created_at: '2024-04-28T15:30:00Z',
       items: [
         {
           product_id: 3,
@@ -89,7 +90,7 @@ export class OrderService {
       user_id: 1,
       status: 'PROCESSING',
       total_price: 99.85,
-      created_at: new Date('2024-05-01T09:10:00Z'),
+      created_at: '2024-05-01T09:10:00Z',
       items: [
         {
           product_id: 7,
@@ -98,7 +99,7 @@ export class OrderService {
           productName: 'Bamboo Cutting Board',
           imageUrl: 'assets/images/placeholder.png',
           seller_id: 2,
-        },
+        }, // Seller 2 ürünü
         {
           product_id: 4,
           quantity: 1,
@@ -122,7 +123,7 @@ export class OrderService {
       user_id: 1,
       status: 'CANCELLED',
       total_price: 89.9,
-      created_at: new Date('2024-03-15T12:00:00Z'),
+      created_at: '2024-03-15T12:00:00Z',
       items: [
         {
           product_id: 5,
@@ -131,15 +132,16 @@ export class OrderService {
           productName: 'Running Shoes - Model Runner',
           imageUrl: 'assets/images/placeholder.png',
           seller_id: 2,
-        },
+        }, // Seller 2 ürünü
       ],
     },
     {
+      // Seller 2 için İade Talebi Örneği
       id: 1005,
       user_id: 1,
-      status: 'PROCESSING',
+      status: 'RETURN_REQUESTED',
       total_price: 45.45,
-      created_at: new Date('2024-05-02T10:00:00Z'),
+      created_at: '2024-05-02T10:00:00Z',
       items: [
         {
           product_id: 2,
@@ -160,11 +162,12 @@ export class OrderService {
       ],
     },
     {
+      // Seller 2 için Tamamlanmış İade Örneği
       id: 1006,
       user_id: 3,
-      status: 'DELIVERED',
+      status: 'RETURNED',
       total_price: 109.85,
-      created_at: new Date('2024-04-30T18:00:00Z'),
+      created_at: '2024-04-30T18:00:00Z',
       items: [
         {
           product_id: 5,
@@ -179,6 +182,24 @@ export class OrderService {
           quantity: 2,
           unit_price: 9.99,
           productName: 'Smartphone Holder Grip',
+          imageUrl: 'assets/images/placeholder.png',
+          seller_id: 101,
+        },
+      ],
+    },
+    {
+      // Seller 2 ile ilgisi olmayan başka bir sipariş
+      id: 1007,
+      user_id: 1,
+      status: 'DELIVERED',
+      total_price: 149.0,
+      created_at: '2024-05-03T12:00:00Z',
+      items: [
+        {
+          product_id: 3,
+          quantity: 1,
+          unit_price: 149.0,
+          productName: 'Wireless Noise-Cancelling Headphones',
           imageUrl: 'assets/images/placeholder.png',
           seller_id: 101,
         },
@@ -421,5 +442,30 @@ export class OrderService {
     return of(
       order ? { ...order, created_at: new Date(order.created_at) } : undefined
     ).pipe(delay(200));
+  }
+
+  getReturnRequestsBySellerId(sellerId: number): Observable<Order[]> {
+    console.log(
+      `OrderService (Mock): Fetching return requests/returns for Seller ID: ${sellerId}`
+    );
+    const relevantOrders = this.mockOrders.filter(
+      (order) =>
+        // Durumu iade ile ilgili mi?
+        (order.status === 'RETURN_REQUESTED' || order.status === 'RETURNED') &&
+        // İçinde bu satıcıya ait ürün var mı?
+        order.items.some((item) => item.seller_id === sellerId)
+    );
+    // Tarihe göre sırala
+    relevantOrders.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    console.log(
+      `Found ${relevantOrders.length} return-related orders for seller ${sellerId}:`,
+      relevantOrders
+    );
+    return of(
+      relevantOrders.map((o) => ({ ...o, created_at: new Date(o.created_at) }))
+    ).pipe(delay(300));
   }
 }

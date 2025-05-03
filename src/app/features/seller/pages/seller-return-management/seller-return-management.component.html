@@ -1,0 +1,125 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Return Management</h1>
+
+  <div *ngIf="isLoading" class="text-center py-10">
+    Loading return requests...
+  </div>
+
+  <div
+    *ngIf="!isLoading && returnRequests.length === 0"
+    class="text-center py-10 text-gray-500 bg-white shadow rounded-lg p-6"
+  >
+    There are currently no return requests or completed returns for your
+    products.
+  </div>
+
+  <div
+    *ngIf="!isLoading && returnRequests.length > 0"
+    class="bg-white shadow overflow-hidden sm:rounded-lg"
+  >
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Order ID
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Customer ID
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Request/Return Date
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Status
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Your Item(s) in Order
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let order of returnRequests">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <a
+                (click)="viewOrder(order.id)"
+                class="text-indigo-600 hover:text-indigo-900 cursor-pointer"
+                >#{{ order.id }}</a
+              >
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ order.user_id }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ order.created_at | date : "medium" }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                [ngClass]="'bg-purple-100 text-purple-800'"
+              >
+                {{ order.status }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+              <ul class="list-disc list-inside">
+                <li
+                  *ngFor="let item of getSellerItems(order)"
+                  class="truncate"
+                  [title]="item.productName"
+                >
+                  {{ item.productName }} (Qty: {{ item.quantity }})
+                </li>
+              </ul>
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2"
+            >
+              <button
+                *ngIf="order.status === 'RETURN_REQUESTED'"
+                (click)="approveReturn(order.id)"
+                class="text-green-600 hover:text-green-900"
+              >
+                Approve
+              </button>
+              <button
+                *ngIf="order.status === 'RETURN_REQUESTED'"
+                (click)="rejectReturn(order.id)"
+                class="text-red-600 hover:text-red-900"
+              >
+                Reject
+              </button>
+              <button
+                (click)="viewOrder(order.id)"
+                class="text-indigo-600 hover:text-indigo-900"
+              >
+                Details
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -6,6 +6,7 @@ import { EditProductComponent } from './pages/edit-product/edit-product.componen
 import { AddProductComponent } from './pages/add-product/add-product.component';
 import { SellerOrderManagementComponent } from './pages/seller-order-management/seller-order-management.component';
 import { SellerOrderDetailComponent } from './pages/seller-order-detail/seller-order-detail.component';
+import { SellerReturnManagementComponent } from './pages/seller-return-management/seller-return-management.component';
 
 const routes: Routes = [
   {
@@ -26,6 +27,7 @@ const routes: Routes = [
   },
   { path: 'my-orders', component: SellerOrderManagementComponent },
   { path: 'my-orders/:orderId', component: SellerOrderDetailComponent },
+  { path: 'returns', component: SellerReturnManagementComponent },
 ];
 
 @NgModule({
