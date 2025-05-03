@@ -14,12 +14,13 @@ import { Observable } from 'rxjs';
 export class HeaderComponent implements OnInit {
   itemCount$: Observable<number>;
   isLoggedIn$: Observable<boolean>;
-  searchTerm: string = ''; // Arama terimini tutacak değişken
+  searchTerm: string = '';
+  isMobileMenuOpen: boolean = false;
 
   constructor(
     private cartService: CartService,
     private authService: AuthService,
-    private router: Router // Router inject et
+    private router: Router
   ) {
     this.itemCount$ = this.cartService.itemCount$;
     this.isLoggedIn$ = this.authService.isLoggedIn$;
@@ -42,5 +43,9 @@ export class HeaderComponent implements OnInit {
       // Arama terimi boşsa, query parametresi olmadan products sayfasına git (tüm ürünleri göster)
       this.router.navigate(['/products']);
     }
+  }
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }
 }

@@ -9,6 +9,48 @@
 
   <div class="container mx-auto px-4 py-3">
     <div class="flex justify-between items-center space-x-4">
+      <div class="md:hidden">
+        <button
+          (click)="toggleMobileMenu()"
+          type="button"
+          class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-orange-500"
+        >
+          <span class="sr-only">Open main menu</span>
+          <svg
+            *ngIf="!isMobileMenuOpen"
+            class="h-6 w-6"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+          <svg
+            *ngIf="isMobileMenuOpen"
+            class="h-6 w-6"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
       <div class="flex-shrink-0">
         <a routerLink="/" class="cursor-pointer">
           <span class="text-2xl font-bold text-orange-500">Anason</span>
@@ -16,37 +58,6 @@
       </div>
 
       <div class="flex-grow max-w-xl mx-4 hidden md:block">
-        <div class="relative">
-          <input
-            type="text"
-            placeholder="Search products or categories..."
-            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent"
-            [(ngModel)]="searchTerm"
-            (keyup.enter)="searchProducts()"
-          />
-          <button
-            type="button"
-            class="absolute right-0 top-0 mt-2 mr-3 text-orange-500 hover:text-orange-700"
-            (click)="searchProducts()"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div class="mt-3 md:hidden px-4 pb-3">
         <div class="relative">
           <input
             type="text"
@@ -101,7 +112,6 @@
             <span class="text-sm hidden lg:inline">Login / Sign Up</span>
           </a>
         </ng-container>
-
         <ng-container *ngIf="isLoggedIn$ | async">
           <a
             routerLink="/profile"
@@ -162,7 +172,6 @@
             <span class="text-sm hidden lg:inline">Logout</span>
           </button>
         </ng-container>
-
         <a
           routerLink="/cart"
           class="relative flex items-center space-x-1 hover:text-orange-500"
@@ -192,15 +201,19 @@
         </a>
       </div>
     </div>
-    <div class="mt-3 md:hidden px-4 pb-3">
+    <div class="mt-3 md:hidden px-4 pb-2">
       <div class="relative">
         <input
           type="text"
-          placeholder="Search..."
+          placeholder="Search products or categories..."
           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent"
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="searchProducts()"
         />
         <button
+          type="button"
           class="absolute right-0 top-0 mt-2 mr-3 text-orange-500 hover:text-orange-700"
+          (click)="searchProducts()"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -221,69 +234,141 @@
     </div>
   </div>
 
+  <div
+    class="md:hidden border-t border-gray-200"
+    id="mobile-menu"
+    [class.hidden]="!isMobileMenuOpen"
+  >
+    <ul class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+      <li>
+        <a
+          href="#"
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-white hover:bg-orange-500"
+          >Women</a
+        >
+      </li>
+      <li>
+        <a
+          href="#"
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-white hover:bg-orange-500"
+          >Men</a
+        >
+      </li>
+      <li>
+        <a
+          href="#"
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-white hover:bg-orange-500"
+          >Kids</a
+        >
+      </li>
+      <li>
+        <a
+          href="#"
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-white hover:bg-orange-500"
+          >Home & Living</a
+        >
+      </li>
+      <li>
+        <a
+          href="#"
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-white hover:bg-orange-500"
+          >Grocery</a
+        >
+      </li>
+      <li>
+        <a
+          href="#"
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-white hover:bg-orange-500"
+          >Cosmetics</a
+        >
+      </li>
+      <li>
+        <a
+          href="#"
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-white hover:bg-orange-500"
+          >Shoes & Bags</a
+        >
+      </li>
+      <li>
+        <a
+          href="#"
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-white hover:bg-orange-500"
+          >Electronics</a
+        >
+      </li>
+      <li>
+        <a
+          href="#"
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-white hover:bg-orange-500"
+          >Sports & Outdoor</a
+        >
+      </li>
+    </ul>
+  </div>
+
   <nav class="bg-white border-t border-gray-200 hidden md:block">
     <div class="container mx-auto px-4">
       <ul class="flex space-x-6 py-2 text-sm font-medium text-gray-700">
         <li>
           <a
             href="#"
-            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-2"
+            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-1"
             >Women</a
           >
         </li>
         <li>
           <a
             href="#"
-            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-2"
+            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-1"
             >Men</a
           >
         </li>
         <li>
           <a
             href="#"
-            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-2"
+            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-1"
             >Kids</a
           >
         </li>
         <li>
           <a
             href="#"
-            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-2"
+            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-1"
             >Home & Living</a
           >
         </li>
         <li>
           <a
             href="#"
-            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-2"
+            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-1"
             >Grocery</a
           >
         </li>
         <li>
           <a
             href="#"
-            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-2"
+            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-1"
             >Cosmetics</a
           >
         </li>
         <li>
           <a
             href="#"
-            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-2"
+            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-1"
             >Shoes & Bags</a
           >
         </li>
         <li>
           <a
             href="#"
-            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-2"
+            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-1"
             >Electronics</a
           >
         </li>
         <li>
           <a
             href="#"
-            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-2"
+            class="hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500 pb-1"
             >Sports & Outdoor</a
           >
         </li>
