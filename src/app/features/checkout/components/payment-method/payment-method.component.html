@@ -1,0 +1,52 @@
+<div class="border rounded-lg shadow-sm p-6 bg-white">
+  <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
+    Payment Method
+  </h3>
+  <fieldset>
+    <legend class="sr-only">Payment type</legend>
+    <div class="space-y-4">
+      <div
+        class="border rounded-md p-3 has-[:checked]:bg-orange-50 has-[:checked]:border-orange-300"
+      >
+        <label
+          for="stripe"
+          class="flex items-center cursor-pointer justify-between"
+        >
+          <div class="flex items-center">
+            <input
+              type="radio"
+              id="stripe"
+              name="paymentMethod"
+              value="stripe"
+              class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300"
+              [(ngModel)]="selectedMethod"
+              (ngModelChange)="onMethodChange()"
+            />
+            <span class="ml-3 font-medium text-gray-700"
+              >Credit Card (Stripe)</span
+            >
+          </div>
+          <div class="flex space-x-1">
+            <img
+              src="https://img.icons8.com/color/48/visa.png"
+              alt="Visa"
+              class="h-4"
+            />
+            <img
+              src="https://img.icons8.com/color/48/mastercard-logo.png"
+              alt="Mastercard"
+              class="h-4"
+            />
+          </div>
+        </label>
+        <div *ngIf="selectedMethod === 'stripe'" class="mt-4 pl-7 pr-2">
+          <div id="stripe-card-element" class="border rounded p-2 bg-gray-50">
+            <p class="text-sm text-gray-500 italic">
+              (Stripe card form placeholder)
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+</div>

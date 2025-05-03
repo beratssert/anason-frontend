@@ -116,11 +116,21 @@
             <span>Estimated Total</span>
             <span>${{ totalPrice$ | async | number : "1.2-2" }}</span>
           </div>
-          <button
-            class="w-full mt-6 py-2.5 px-4 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-75"
-          >
-            Proceed to Checkout
-          </button>
+          <div class="mt-6">
+            <a
+              *ngIf="cart.items.length > 0"
+              routerLink="/checkout"
+              class="block w-full text-center py-2.5 px-4 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-75"
+            >
+              Proceed to Checkout
+            </a>
+            <p
+              *ngIf="cart.items.length === 0"
+              class="text-sm text-center text-gray-500"
+            >
+              Add items to proceed to checkout.
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -1,0 +1,36 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Checkout</h1>
+
+  <div class="flex flex-col lg:flex-row gap-8 xl:gap-12 items-start">
+    <div class="w-full lg:w-2/3 space-y-6">
+      <section aria-labelledby="shipping-address-heading">
+        <h2 id="shipping-address-heading" class="sr-only">Shipping Address</h2>
+        <app-shipping-address></app-shipping-address>
+      </section>
+
+      <section aria-labelledby="payment-method-heading">
+        <h2 id="payment-method-heading" class="sr-only">Payment Method</h2>
+        <app-payment-method></app-payment-method>
+      </section>
+    </div>
+
+    <div class="w-full lg:w-1/3">
+      <div class="lg:sticky lg:top-24">
+        <section aria-labelledby="order-summary-heading">
+          <h2 id="order-summary-heading" class="sr-only">Order Summary</h2>
+          <app-order-summary></app-order-summary>
+        </section>
+
+        <div class="mt-6">
+          <button
+            type="button"
+            class="w-full py-3 px-4 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            Place Order (Requires Backend)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

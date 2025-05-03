@@ -63,6 +63,14 @@ const routes: Routes = [
     redirectTo: '/products', // Ana sayfa ürünlere yönlendirir
     pathMatch: 'full',
   },
+  {
+    path: 'checkout',
+    loadChildren: () =>
+      import('./features/checkout/checkout.module').then(
+        (m) => m.CheckoutModule
+      ),
+    canActivate: [authGuard],
+  },
   // { path: '**', component: NotFoundComponent } // 404 sayfası eklenebilir
 ];
 

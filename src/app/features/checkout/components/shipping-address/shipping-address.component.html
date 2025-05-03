@@ -1,0 +1,203 @@
+<div class="border rounded-lg shadow-sm p-6 bg-white">
+  <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
+    Shipping Address
+  </h3>
+  <form
+    [formGroup]="shippingAddressForm"
+    (ngSubmit)="onSubmit()"
+    class="space-y-4"
+  >
+    <div>
+      <label for="full_name" class="block text-sm font-medium text-gray-700"
+        >Full Name *</label
+      >
+      <input
+        type="text"
+        id="full_name"
+        formControlName="full_name"
+        required
+        class="mt-1 block w-full border rounded-md shadow-sm p-2"
+        [ngClass]="{
+          'border-red-500 focus:ring-red-500 focus:border-red-500':
+            fullName?.invalid && fullName?.touched,
+          'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+            fullName?.invalid && fullName?.touched
+          )
+        }"
+      />
+      <div
+        *ngIf="fullName?.invalid && (fullName?.dirty || fullName?.touched)"
+        class="mt-1 text-xs text-red-600"
+      >
+        <span *ngIf="fullName?.errors?.['required']"
+          >Full name is required.</span
+        >
+        <span *ngIf="fullName?.errors?.['minlength']"
+          >Must be at least 3 characters.</span
+        >
+      </div>
+    </div>
+    <div>
+      <label for="phone" class="block text-sm font-medium text-gray-700"
+        >Phone Number *</label
+      >
+      <input
+        type="tel"
+        id="phone"
+        formControlName="phone"
+        required
+        class="mt-1 block w-full border rounded-md shadow-sm p-2"
+        [ngClass]="{
+          'border-red-500 focus:ring-red-500 focus:border-red-500':
+            phone?.invalid && phone?.touched,
+          'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+            phone?.invalid && phone?.touched
+          )
+        }"
+      />
+      <div
+        *ngIf="phone?.invalid && (phone?.dirty || phone?.touched)"
+        class="mt-1 text-xs text-red-600"
+      >
+        <span *ngIf="phone?.errors?.['required']"
+          >Phone number is required.</span
+        >
+        <span *ngIf="phone?.errors?.['pattern']"
+          >Please enter a valid phone number.</span
+        >
+      </div>
+    </div>
+    <div>
+      <label for="address_line" class="block text-sm font-medium text-gray-700"
+        >Address Line *</label
+      >
+      <input
+        type="text"
+        id="address_line"
+        formControlName="address_line"
+        required
+        placeholder="Street address, P.O. box, etc."
+        class="mt-1 block w-full border rounded-md shadow-sm p-2"
+        [ngClass]="{
+          'border-red-500 focus:ring-red-500 focus:border-red-500':
+            addressLine?.invalid && addressLine?.touched,
+          'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+            addressLine?.invalid && addressLine?.touched
+          )
+        }"
+      />
+      <div
+        *ngIf="
+          addressLine?.invalid && (addressLine?.dirty || addressLine?.touched)
+        "
+        class="mt-1 text-xs text-red-600"
+      >
+        <span *ngIf="addressLine?.errors?.['required']"
+          >Address is required.</span
+        >
+      </div>
+    </div>
+    <div class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-3">
+      <div>
+        <label for="city" class="block text-sm font-medium text-gray-700"
+          >City *</label
+        >
+        <input
+          type="text"
+          id="city"
+          formControlName="city"
+          required
+          class="mt-1 block w-full border rounded-md shadow-sm p-2"
+          [ngClass]="{
+            'border-red-500 focus:ring-red-500 focus:border-red-500':
+              city?.invalid && city?.touched,
+            'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+              city?.invalid && city?.touched
+            )
+          }"
+        />
+        <div
+          *ngIf="city?.invalid && (city?.dirty || city?.touched)"
+          class="mt-1 text-xs text-red-600"
+        >
+          <span *ngIf="city?.errors?.['required']">City is required.</span>
+        </div>
+      </div>
+      <div>
+        <label for="state" class="block text-sm font-medium text-gray-700"
+          >State / Province</label
+        >
+        <input
+          type="text"
+          id="state"
+          formControlName="state"
+          class="mt-1 block w-full border rounded-md shadow-sm p-2 border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+        />
+      </div>
+      <div>
+        <label for="postal_code" class="block text-sm font-medium text-gray-700"
+          >Postal Code *</label
+        >
+        <input
+          type="text"
+          id="postal_code"
+          formControlName="postal_code"
+          required
+          class="mt-1 block w-full border rounded-md shadow-sm p-2"
+          [ngClass]="{
+            'border-red-500 focus:ring-red-500 focus:border-red-500':
+              postalCode?.invalid && postalCode?.touched,
+            'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+              postalCode?.invalid && postalCode?.touched
+            )
+          }"
+        />
+        <div
+          *ngIf="
+            postalCode?.invalid && (postalCode?.dirty || postalCode?.touched)
+          "
+          class="mt-1 text-xs text-red-600"
+        >
+          <span *ngIf="postalCode?.errors?.['required']"
+            >Postal code is required.</span
+          >
+        </div>
+      </div>
+    </div>
+    <div>
+      <label for="country" class="block text-sm font-medium text-gray-700"
+        >Country *</label
+      >
+      <input
+        type="text"
+        id="country"
+        formControlName="country"
+        required
+        class="mt-1 block w-full border rounded-md shadow-sm p-2"
+        [ngClass]="{
+          'border-red-500 focus:ring-red-500 focus:border-red-500':
+            country?.invalid && country?.touched,
+          'border-gray-300 focus:ring-orange-500 focus:border-orange-500': !(
+            country?.invalid && country?.touched
+          )
+        }"
+      />
+      <div
+        *ngIf="country?.invalid && (country?.dirty || country?.touched)"
+        class="mt-1 text-xs text-red-600"
+      >
+        <span *ngIf="country?.errors?.['required']">Country is required.</span>
+      </div>
+    </div>
+
+    <div class="pt-2 text-right">
+      <button
+        type="submit"
+        [disabled]="isSubmitting"
+        class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+      >
+        {{ isSubmitting ? "Saving..." : "Use this Address" }}
+      </button>
+    </div>
+  </form>
+</div>

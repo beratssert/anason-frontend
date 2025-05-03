@@ -1,0 +1,77 @@
+<div class="border rounded-lg shadow-sm p-6 bg-gray-50">
+  <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
+    Order Summary
+  </h3>
+
+  <ng-container *ngIf="cart$ | async as cart">
+    <div
+      *ngIf="cart.items.length > 0"
+      class="flow-root mb-4 max-h-60 overflow-y-auto border-b pb-4"
+    >
+      <ul role="list" class="-my-4 divide-y divide-gray-200">
+        <li
+          *ngFor="let item of cart.items; trackBy: trackByProductId"
+          class="flex py-4 space-x-3"
+        >
+          <div class="flex-shrink-0 h-12 w-12 rounded border bg-gray-100 p-0.5">
+            <img
+              class="h-full w-full object-contain"
+              [src]="item.imageUrl || 'assets/images/placeholder.png'"
+              [alt]="item.name"
+            />
+          </div>
+          <div class="min-w-0 flex-1">
+            <p
+              class="text-sm font-medium text-gray-900 truncate"
+              [title]="item.name"
+            >
+              <a
+                [routerLink]="['/products', item.productId]"
+                class="hover:text-orange-600"
+                >{{ item.name }}</a
+              >
+            </p>
+            <p class="text-sm text-gray-500">Qty: {{ item.quantity }}</p>
+          </div>
+          <div class="flex flex-shrink-0 flex-col items-end">
+            <p class="text-sm font-medium text-gray-900">
+              ${{ item.price * item.quantity | number : "1.2-2" }}
+            </p>
+            <p class="text-xs text-gray-500">
+              (${{ item.price | number : "1.2-2" }} each)
+            </p>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="space-y-1 mb-4 text-sm">
+      <div class="flex justify-between text-gray-600">
+        <span>Subtotal</span>
+        <span>${{ totalPrice$ | async | number : "1.2-2" }}</span>
+      </div>
+      <div class="flex justify-between text-gray-600">
+        <span>Shipping estimate</span>
+        <span>FREE</span>
+      </div>
+      <div class="flex justify-between text-gray-600">
+        <span>Tax estimate</span>
+        <span class="text-xs">Calculated at payment</span>
+      </div>
+    </div>
+
+    <div class="border-t pt-4">
+      <div class="flex justify-between font-bold text-base text-gray-900">
+        <span>Order total</span>
+        <span>${{ totalPrice$ | async | number : "1.2-2" }}</span>
+      </div>
+    </div>
+
+    <div
+      *ngIf="cart.items.length === 0"
+      class="text-sm text-center text-gray-500 py-6"
+    >
+      Add items to your cart to see the summary.
+    </div>
+  </ng-container>
+</div>
