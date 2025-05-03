@@ -2,14 +2,14 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
-// Interfaces
+// Interface'ler
 export interface OrderItem {
   product_id: number;
   quantity: number;
   unit_price: number;
   productName?: string;
   imageUrl?: string;
-  seller_id?: number; // Mock data için eklendi
+  seller_id?: number;
 }
 
 export type OrderStatus =
@@ -30,11 +30,17 @@ export interface Order {
   items: OrderItem[];
 }
 
+export interface TrackingInfo {
+  number: string;
+  url: string;
+  carrier: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class OrderService {
-  // Mock Data (OrderItem'larda seller_id ile güncellendi)
+  // Mock Data
   private mockOrders: Order[] = [
     {
       id: 1001,
@@ -43,7 +49,6 @@ export class OrderService {
       total_price: 225.49,
       created_at: new Date('2024-04-25T11:00:00Z'),
       items: [
-        // Bu siparişte Seller ID 101 ve 102'den ürünler var
         {
           product_id: 1,
           quantity: 1,
@@ -69,7 +74,6 @@ export class OrderService {
       total_price: 149.0,
       created_at: new Date('2024-04-28T15:30:00Z'),
       items: [
-        // Bu siparişte Seller ID 101'den ürün var
         {
           product_id: 3,
           quantity: 1,
@@ -87,7 +91,6 @@ export class OrderService {
       total_price: 99.85,
       created_at: new Date('2024-05-01T09:10:00Z'),
       items: [
-        // Bu siparişte Seller ID 102, 103 ve 101'den ürünler var
         {
           product_id: 7,
           quantity: 2,
@@ -121,7 +124,6 @@ export class OrderService {
       total_price: 89.9,
       created_at: new Date('2024-03-15T12:00:00Z'),
       items: [
-        // Bu siparişte Seller ID 102'den ürün var
         {
           product_id: 5,
           quantity: 1,
@@ -132,7 +134,6 @@ export class OrderService {
         },
       ],
     },
-    // YENİ EKLEDİĞİMİZ VEYA GÜNCELLEDİĞİMİZ SİPARİŞLER (Seller ID 2 İÇEREN)
     {
       id: 1005,
       user_id: 1,
@@ -140,7 +141,6 @@ export class OrderService {
       total_price: 45.45,
       created_at: new Date('2024-05-02T10:00:00Z'),
       items: [
-        // Bu siparişte Seller ID 2'den (bizim satıcımız) ürün var
         {
           product_id: 2,
           quantity: 1,
@@ -148,15 +148,15 @@ export class OrderService {
           productName: 'Organic Cotton T-Shirt',
           imageUrl: 'assets/images/placeholder.png',
           seller_id: 2,
-        }, // BU DEĞİŞTİ -> SELLER_ID 2 OLMALI
+        },
         {
           product_id: 7,
           quantity: 1,
           unit_price: 19.95,
           productName: 'Bamboo Cutting Board',
           imageUrl: 'assets/images/placeholder.png',
-          seller_id: 102,
-        }, // BU DEĞİŞTİ -> SELLER_ID 2 OLMALI
+          seller_id: 2,
+        },
       ],
     },
     {
@@ -166,7 +166,6 @@ export class OrderService {
       total_price: 109.85,
       created_at: new Date('2024-04-30T18:00:00Z'),
       items: [
-        // Bu siparişte Seller ID 2'den ve 101'den ürünler var
         {
           product_id: 5,
           quantity: 1,
@@ -174,7 +173,7 @@ export class OrderService {
           productName: 'Running Shoes - Model Runner',
           imageUrl: 'assets/images/placeholder.png',
           seller_id: 2,
-        }, // BU DEĞİŞTİ -> SELLER_ID 2 OLMALI
+        },
         {
           product_id: 6,
           quantity: 2,
@@ -200,23 +199,23 @@ export class OrderService {
   constructor() {}
 
   getOrdersByUserId(userId: number): Observable<Order[]> {
-    const userOrders = this.mockOrders.filter(
-      (order) => order.user_id === userId
-    );
+    const userOrders = this.mockOrders.filter((o) => o.user_id === userId);
     userOrders.sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-    return of(userOrders).pipe(delay(400));
+    return of(
+      userOrders.map((o) => ({ ...o, created_at: new Date(o.created_at) }))
+    ).pipe(delay(400));
   }
 
   getOrderById(orderId: number, userId: number): Observable<Order | undefined> {
-    // userId kontrolü customer için geçerli, admin/seller farklı olabilir
     const order = this.mockOrders.find(
       (o) => o.id === orderId && o.user_id === userId
     );
-    // Admin/Seller için: const order = this.mockOrders.find(o => o.id === orderId);
-    return of(order).pipe(delay(200));
+    return of(
+      order ? { ...order, created_at: new Date(order.created_at) } : undefined
+    ).pipe(delay(200));
   }
 
   getAllOrders(): Observable<Order[]> {
@@ -224,7 +223,9 @@ export class OrderService {
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-    return of(allOrders).pipe(delay(350));
+    return of(
+      allOrders.map((o) => ({ ...o, created_at: new Date(o.created_at) }))
+    ).pipe(delay(350));
   }
 
   updateOrderStatus(
@@ -234,10 +235,10 @@ export class OrderService {
     const orderIndex = this.mockOrders.findIndex((o) => o.id === orderId);
     if (orderIndex > -1) {
       this.mockOrders[orderIndex].status = newStatus;
-      this.mockOrders[orderIndex].created_at = new Date(
-        this.mockOrders[orderIndex].created_at
-      ); // Tarihi koru/dönüştür
-      return of({ ...this.mockOrders[orderIndex] }).pipe(delay(250));
+      return of({
+        ...this.mockOrders[orderIndex],
+        created_at: new Date(this.mockOrders[orderIndex].created_at),
+      }).pipe(delay(250));
     } else {
       return of(null).pipe(delay(250));
     }
@@ -251,9 +252,98 @@ export class OrderService {
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-    return of(sellerOrders).pipe(delay(300));
+    return of(
+      sellerOrders.map((o) => ({ ...o, created_at: new Date(o.created_at) }))
+    ).pipe(delay(300));
   }
 
+  updateOrderStatusBySeller(
+    orderId: number,
+    newStatus: OrderStatus,
+    sellerId: number
+  ): Observable<Order | null> {
+    const orderIndex = this.mockOrders.findIndex((o) => o.id === orderId);
+    if (orderIndex === -1) {
+      return throwError(() => new Error(`Order #${orderId} not found.`));
+    }
+    const order = this.mockOrders[orderIndex];
+    const hasSellerItem = order.items.some(
+      (item) => item.seller_id === sellerId
+    );
+    // Admin (ID 3) de bu metodu kullanabilir diye kontrol ekleyelim (ya da ayrı metot daha iyi)
+    if (!hasSellerItem && sellerId !== 3) {
+      return throwError(
+        () => new Error('Permission denied to update this order status.')
+      );
+    }
+    const currentStatus = order.status;
+    let allowed = false;
+    if (currentStatus === 'PENDING' && newStatus === 'PROCESSING') {
+      allowed = true;
+    } else if (currentStatus === 'PROCESSING' && newStatus === 'SHIPPED') {
+      allowed = true;
+    }
+    if (!allowed) {
+      return throwError(
+        () =>
+          new Error(
+            `Seller cannot change status from ${currentStatus} to ${newStatus}.`
+          )
+      );
+    }
+    this.mockOrders[orderIndex].status = newStatus;
+    return of({
+      ...this.mockOrders[orderIndex],
+      created_at: new Date(this.mockOrders[orderIndex].created_at),
+    }).pipe(delay(250));
+  }
+
+  cancelOrder(orderId: number, userId: number): Observable<Order | null> {
+    const orderIndex = this.mockOrders.findIndex(
+      (o) => o.id === orderId && o.user_id === userId
+    );
+    if (orderIndex === -1) {
+      return throwError(() => new Error(`Order #${orderId} not found.`));
+    }
+    const order = this.mockOrders[orderIndex];
+    if (order.status !== 'PENDING' && order.status !== 'PROCESSING') {
+      return throwError(
+        () => new Error(`Order cannot be cancelled in ${order.status} status.`)
+      );
+    }
+    this.mockOrders[orderIndex].status = 'CANCELLED';
+    const updatedOrder = {
+      ...this.mockOrders[orderIndex],
+      created_at: new Date(this.mockOrders[orderIndex].created_at),
+    };
+    return of(updatedOrder).pipe(delay(300));
+  }
+
+  requestReturn(orderId: number, userId: number): Observable<Order | null> {
+    const orderIndex = this.mockOrders.findIndex(
+      (o) => o.id === orderId && o.user_id === userId
+    );
+    if (orderIndex === -1) {
+      return throwError(() => new Error(`Order #${orderId} not found.`));
+    }
+    const order = this.mockOrders[orderIndex];
+    if (order.status !== 'DELIVERED') {
+      return throwError(
+        () =>
+          new Error(
+            `Return can only be requested for DELIVERED orders. Current status: ${order.status}`
+          )
+      );
+    }
+    this.mockOrders[orderIndex].status = 'RETURN_REQUESTED';
+    const updatedOrder = {
+      ...this.mockOrders[orderIndex],
+      created_at: new Date(this.mockOrders[orderIndex].created_at),
+    };
+    return of(updatedOrder).pipe(delay(300));
+  }
+
+  // EKLENDİ: Seller için Sipariş Detayı Getirme Metodu
   getOrderDetailForSeller(
     orderId: number,
     sellerId: number
@@ -265,137 +355,56 @@ export class OrderService {
 
     if (!order) {
       console.log(`Order ${orderId} not found.`);
-      return of(undefined).pipe(delay(100)); // Sipariş yoksa undefined döndür
+      return of(undefined).pipe(delay(100));
     }
 
-    // Siparişte bu satıcıya ait en az bir ürün var mı kontrol et
     const hasSellerItem = order.items.some(
       (item) => item.seller_id === sellerId
     );
+    const isAdmin = sellerId === 3; // Mock admin ID'si 3 varsayımı
 
-    if (!hasSellerItem && sellerId !== 3) {
-      // Admin (ID:3) her siparişi görebilsin varsayımı
+    if (!hasSellerItem && !isAdmin) {
       console.warn(
         `Seller ${sellerId} does not have items in order ${orderId}. Access denied (mock).`
       );
-      return of(undefined).pipe(delay(100)); // Yetkisi yoksa undefined döndür
+      // Hata fırlatmak component'ta yakalamak için daha iyi olabilir
+      // return throwError(() => new Error('Access denied to this order detail.'));
+      return of(undefined).pipe(delay(100));
     }
 
-    console.log('Found order for seller:', order);
-    // Tarihi Date objesine çevirelim
+    console.log('Found order for seller/admin:', order);
     const orderWithDate = { ...order, created_at: new Date(order.created_at) };
     return of(orderWithDate).pipe(delay(200));
   }
 
-  updateOrderStatusBySeller(
+  getTrackingInfo(
     orderId: number,
-    newStatus: OrderStatus,
-    sellerId: number
-  ): Observable<Order | null> {
-    console.log(
-      `OrderService (Mock): [SELLER ${sellerId}] Attempting to update status for order ${orderId} to ${newStatus}`
-    );
-    const orderIndex = this.mockOrders.findIndex((o) => o.id === orderId);
-
-    if (orderIndex === -1) {
-      console.error(`[SELLER ${sellerId}] Order ${orderId} not found.`);
-      return of(null).pipe(delay(100)); // Sipariş bulunamadı
-    }
-
-    const order = this.mockOrders[orderIndex];
-
-    // 1. Siparişte bu satıcıya ait ürün var mı? (Güvenlik kontrolü)
-    const hasSellerItem = order.items.some(
-      (item) => item.seller_id === sellerId
-    );
-    if (!hasSellerItem) {
-      console.error(
-        `[SELLER ${sellerId}] does not have items in order ${orderId}. Update denied.`
-      );
-      return throwError(
-        () => new Error('Permission denied to update this order status.')
-      ); // Hata fırlat
-    }
-
-    // 2. İzin verilen durum geçişi mi? (Örn: Sadece PROCESSING'den SHIPPED'a)
-    const currentStatus = order.status;
-    let allowed = false;
-    if (currentStatus === 'PENDING' && newStatus === 'PROCESSING') {
-      allowed = true;
-    } else if (currentStatus === 'PROCESSING' && newStatus === 'SHIPPED') {
-      allowed = true;
-    }
-    // İleride başka kurallar eklenebilir
-
-    if (!allowed) {
-      console.warn(
-        `[SELLER ${sellerId}] Status transition from ${currentStatus} to ${newStatus} is not allowed for order ${orderId}.`
-      );
-      return throwError(
-        () =>
-          new Error(
-            `Cannot change status from ${currentStatus} to ${newStatus}.`
-          )
-      ); // Hata fırlat
-    }
-
-    // Güncelleme işlemi
-    this.mockOrders[orderIndex].status = newStatus;
-    console.log(
-      'Order status updated in mock list by seller:',
-      this.mockOrders[orderIndex]
-    );
-    // Gerçek uygulamada belki sadece ilgili sipariş item'larının durumu güncellenir.
-
-    // Güncellenmiş siparişi döndür
-    return of({
-      ...this.mockOrders[orderIndex],
-      created_at: new Date(this.mockOrders[orderIndex].created_at),
-    }).pipe(delay(250));
-  }
-
-  cancelOrder(orderId: number, userId: number): Observable<Order | null> {
-    console.log(
-      `OrderService (Mock): Attempting to cancel order ${orderId} for user ${userId}`
-    );
-    const orderIndex = this.mockOrders.findIndex(
+    userId: number
+  ): Observable<TrackingInfo | null> {
+    const order = this.mockOrders.find(
       (o) => o.id === orderId && o.user_id === userId
     );
-
-    if (orderIndex === -1) {
-      console.error(
-        `Order ${orderId} not found or does not belong to user ${userId}.`
-      );
-      return of(null).pipe(delay(100)); // Sipariş bulunamadı veya kullanıcıya ait değil
+    if (order && (order.status === 'SHIPPED' || order.status === 'DELIVERED')) {
+      const mockTracking: TrackingInfo = {
+        number: `MOCKTRACK${orderId}XYZ`,
+        url: `https://www.example-tracker.com/track?id=MOCKTRACK${orderId}XYZ`,
+        carrier: 'Mock Kargo Intl.',
+      };
+      return of(mockTracking).pipe(delay(150));
+    } else {
+      return of(null).pipe(delay(100));
     }
+  }
 
-    const order = this.mockOrders[orderIndex];
-
-    // İptal etme koşulunu kontrol et (örneğin sadece PENDING veya PROCESSING durumundayken)
-    if (order.status !== 'PENDING' && order.status !== 'PROCESSING') {
-      console.warn(
-        `Order ${orderId} cannot be cancelled because its status is ${order.status}.`
-      );
-      // Hata fırlatmak, component tarafında yakalamak için daha iyi olabilir
-      return throwError(
-        () => new Error(`Order cannot be cancelled in ${order.status} status.`)
-      ).pipe(delay(100));
-      // Veya sadece null döndür: return of(null).pipe(delay(100));
-    }
-
-    // Durumu CANCELLED yap
-    this.mockOrders[orderIndex].status = 'CANCELLED';
-    console.log(
-      'Order status updated to CANCELLED in mock list:',
-      this.mockOrders[orderIndex]
+  getInvoiceLink(orderId: number, userId: number): Observable<string | null> {
+    const order = this.mockOrders.find(
+      (o) => o.id === orderId && o.user_id === userId
     );
-
-    // Güncellenmiş siparişi döndür
-    // Tarih objesini koruduğumuzdan emin olalım
-    const updatedOrder = {
-      ...this.mockOrders[orderIndex],
-      created_at: new Date(this.mockOrders[orderIndex].created_at),
-    };
-    return of(updatedOrder).pipe(delay(300));
+    if (order && order.status !== 'CANCELLED' && order.status !== 'PENDING') {
+      const mockPdfUrl = `/assets/invoices/mock-invoice-${orderId}.pdf`;
+      return of(mockPdfUrl).pipe(delay(120));
+    } else {
+      return of(null).pipe(delay(100));
+    }
   }
 }

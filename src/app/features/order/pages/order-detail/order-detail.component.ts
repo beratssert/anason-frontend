@@ -5,7 +5,8 @@ import {
   OrderService,
   Order,
   OrderStatus,
-} from '../../../../core/services/order.service'; // OrderStatus import edildiğinden emin ol
+  TrackingInfo,
+} from '../../../../core/services/order.service';
 import { ToastrService } from 'ngx-toastr';
 import { switchMap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -22,7 +23,11 @@ export class OrderDetailComponent implements OnInit {
   errorLoading: string | null = null;
   currentUser: User | null = null;
   orderId: number | null = null;
-  updatingStatus: boolean = false; // Eksik olan değişken tanımı EKLENDİ
+  updatingStatus: boolean = false; // Used for cancel/return requests
+  trackingInfo: TrackingInfo | null = null;
+  isLoadingTracking: boolean = false;
+  invoiceLink: string | null = null;
+  isLoadingInvoice: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -45,6 +50,8 @@ export class OrderDetailComponent implements OnInit {
     this.isLoading = true;
     this.errorLoading = null;
     this.order = null;
+    this.trackingInfo = null; // Reset tracking info on load
+    this.invoiceLink = null; // Reset invoice link on load
 
     this.route.paramMap
       .pipe(
@@ -112,7 +119,6 @@ export class OrderDetailComponent implements OnInit {
       )
     ) {
       this.updatingStatus = true;
-
       this.orderService.cancelOrder(orderId, this.currentUser.id).subscribe({
         next: (updatedOrder) => {
           if (updatedOrder && this.order) {
@@ -142,20 +148,120 @@ export class OrderDetailComponent implements OnInit {
   }
 
   requestReturn(orderId: number | null): void {
-    if (!orderId) return;
-    this.toastr.info(
-      `Return request for order #${orderId} initiated (not implemented).`
-    );
+    if (!orderId || !this.currentUser || !this.order || this.updatingStatus)
+      return;
+
+    if (this.order.status !== 'DELIVERED') {
+      this.toastr.warning(
+        `Return can only be requested for DELIVERED orders. Current status: ${this.order.status}.`
+      );
+      return;
+    }
+
+    if (
+      confirm(
+        `Are you sure you want to request a return for Order #${orderId}?`
+      )
+    ) {
+      this.updatingStatus = true;
+      this.orderService.requestReturn(orderId, this.currentUser.id).subscribe({
+        next: (updatedOrder) => {
+          if (updatedOrder && this.order) {
+            this.order.status = updatedOrder.status;
+            this.toastr.success(
+              `Return requested for Order #${orderId}.`,
+              'Return Requested'
+            );
+          } else {
+            this.toastr.error(
+              `Could not request return for order #${orderId}.`,
+              'Error'
+            );
+          }
+          this.updatingStatus = false;
+        },
+        error: (err) => {
+          console.error(`Error requesting return for order ${orderId}:`, err);
+          this.toastr.error(
+            err.message || `Failed to request return for order #${orderId}.`,
+            'Error'
+          );
+          this.updatingStatus = false;
+        },
+      });
+    }
   }
 
   trackPackage(orderId: number | null): void {
-    if (!orderId) return;
-    this.toastr.info(
-      `Tracking package for order #${orderId} (not implemented).`
-    );
+    if (!orderId || !this.currentUser || this.isLoadingTracking) return;
+
+    this.isLoadingTracking = true;
+    this.trackingInfo = null;
+
+    this.orderService.getTrackingInfo(orderId, this.currentUser.id).subscribe({
+      next: (info) => {
+        if (info) {
+          this.trackingInfo = info;
+          this.toastr.info(
+            `Tracking #: ${info.number} via ${info.carrier}.`,
+            'Tracking Info'
+          );
+          // Sahte URL'i yeni sekmede açma isteğe bağlı
+          // if (info.url && info.url !== '#') {
+          //     window.open(info.url, '_blank');
+          // }
+        } else {
+          this.toastr.warning(
+            'Tracking information is not available for this order yet.',
+            'Not Found'
+          );
+        }
+        this.isLoadingTracking = false;
+      },
+      error: (err) => {
+        console.error(
+          `Error fetching tracking info for order ${orderId}:`,
+          err
+        );
+        this.toastr.error('Could not retrieve tracking information.', 'Error');
+        this.isLoadingTracking = false;
+      },
+    });
+  }
+
+  viewInvoice(orderId: number | null): void {
+    if (!orderId || !this.currentUser || this.isLoadingInvoice) return;
+
+    this.isLoadingInvoice = true;
+    this.invoiceLink = null;
+
+    this.orderService.getInvoiceLink(orderId, this.currentUser.id).subscribe({
+      next: (link) => {
+        if (link) {
+          this.invoiceLink = link;
+          this.toastr.info('Opening invoice...');
+          window.open(this.invoiceLink, '_blank');
+        } else {
+          this.toastr.warning(
+            'Invoice is not available for this order.',
+            'Not Found'
+          );
+        }
+        this.isLoadingInvoice = false;
+      },
+      error: (err) => {
+        console.error(`Error fetching invoice link for order ${orderId}:`, err);
+        this.toastr.error('Could not retrieve invoice link.', 'Error');
+        this.isLoadingInvoice = false;
+      },
+    });
   }
 
   viewProduct(productId: number): void {
     this.router.navigate(['/products', productId]);
+  }
+
+  viewRelatedUser(userId: number): void {
+    this.router.navigate(['/admin/users'], { queryParams: { search: userId } });
   }
 }

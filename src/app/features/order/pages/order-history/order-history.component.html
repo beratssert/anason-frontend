@@ -95,20 +95,6 @@
         >
           View Order Details
         </a>
-        <button
-          *ngIf="order.status === 'DELIVERED'"
-          type="button"
-          class="ml-4 text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
-        >
-          Request Return
-        </button>
-        <button
-          *ngIf="order.status === 'SHIPPED'"
-          type="button"
-          class="ml-4 text-sm font-medium text-green-600 hover:text-green-500 focus:outline-none"
-        >
-          Track Package
-        </button>
       </div>
     </div>
   </div>
