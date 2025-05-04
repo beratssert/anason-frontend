@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core'; // inject eklendi
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router'; // Router import et
-import { AuthService } from '../../../../core/services/auth.service'; // AuthService import et
-import { ToastrService } from 'ngx-toastr'; // ToastrService import et
+import { Router } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-login',
@@ -12,14 +12,13 @@ import { ToastrService } from 'ngx-toastr'; // ToastrService import et
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
-  isSubmitting: boolean = false; // Gönderim durumunu takip etmek için
+  isSubmitting: boolean = false;
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService, // Inject AuthService
-    private router: Router, // Inject Router
-    private toastr: ToastrService // Inject ToastrService
-  ) {}
+  // Servisleri inject ile alalım
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private toastr = inject(ToastrService);
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
@@ -30,35 +29,41 @@ export class LoginComponent implements OnInit {
 
   onSubmit(): void {
     if (this.loginForm.invalid || this.isSubmitting) {
-      this.loginForm.markAllAsTouched(); // Form geçersizse tüm alanları işaretle
+      this.loginForm.markAllAsTouched();
       return;
     }
 
-    this.isSubmitting = true; // Gönderim başladı
+    this.isSubmitting = true;
 
     this.authService.login(this.loginForm.value).subscribe({
-      next: (success) => {
-        if (success) {
-          this.toastr.success('Login successful!', 'Welcome Back');
-          this.router.navigate(['/']); // Başarılı girişte ana sayfaya yönlendir
-        } else {
-          // Mock servis hep true dönüyor ama gerçek API'de burası çalışabilir
-          this.toastr.error(
-            'Login failed. Please check your credentials.',
-            'Error'
-          );
-          this.isSubmitting = false; // Gönderim bitti (hata ile)
+      next: (user) => {
+        // Başarılı login'de user objesi dönecek (AuthService'den)
+        this.isSubmitting = false; // Bunu hemen başa almak daha iyi olabilir
+        this.toastr.success(
+          'Login successful!',
+          `Welcome Back ${user?.username || ''}`
+        );
+        // Yönlendirme: Eğer returnUrl varsa oraya, yoksa role göre dashboard'a veya ana sayfaya
+        const returnUrl =
+          this.router.routerState.snapshot.root.queryParams['returnUrl'] || '/';
+        // Rol bazlı yönlendirme eklenebilir
+        let navigateTo = returnUrl;
+        if (returnUrl === '/') {
+          // Eğer default ise role göre yönlendir
+          if (user.role === 'ADMIN') navigateTo = '/admin';
+          else if (user.role === 'SELLER') navigateTo = '/seller';
+          // else CUSTOMER ana sayfada kalır (veya /profile?)
         }
-        // this.isSubmitting = false; // Başarı durumunda da false'a çekilebilir ama yönlendirme oluyor zaten
+        this.router.navigateByUrl(navigateTo);
       },
       error: (err) => {
-        // Gerçek API'den dönebilecek hataları burada yakala
-        console.error('Login error:', err);
+        console.error('Login error in component:', err);
+        // AuthService'den gelen hata mesajını kullan
         this.toastr.error(
-          err.message || 'An unexpected error occurred during login.',
+          err.message || 'Login failed. Please check credentials.',
           'Login Failed'
         );
-        this.isSubmitting = false; // Gönderim bitti (hata ile)
+        this.isSubmitting = false;
       },
     });
   }

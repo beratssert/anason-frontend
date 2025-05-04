@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -7,14 +7,15 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router'; // Router import et
-import { AuthService } from '../../../../core/services/auth.service'; // AuthService import et
-import { ToastrService } from 'ngx-toastr'; // ToastrService import et
+import { Router } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ToastrService } from 'ngx-toastr';
 
+// passwordMatchValidator
 export const passwordMatchValidator: ValidatorFn = (
   control: AbstractControl
 ): ValidationErrors | null => {
-  /* ... önceki kod ... */ const password = control.get('password');
+  const password = control.get('password');
   const confirmPassword = control.get('confirmPassword');
   if (
     !password ||
@@ -37,18 +38,18 @@ export const passwordMatchValidator: ValidatorFn = (
 })
 export class RegisterComponent implements OnInit {
   registerForm!: FormGroup;
-  isSubmitting: boolean = false; // Gönderim durumunu takip etmek için
+  isSubmitting: boolean = false;
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService, // Inject AuthService
-    private router: Router, // Inject Router
-    private toastr: ToastrService // Inject ToastrService
-  ) {}
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private toastr = inject(ToastrService);
 
   ngOnInit(): void {
     this.registerForm = this.fb.group(
       {
+        // username kontrolü eklendi
+        username: ['', [Validators.required, Validators.minLength(3)]],
         email: ['', [Validators.required, Validators.email]],
         password: ['', [Validators.required, Validators.minLength(6)]],
         confirmPassword: ['', Validators.required],
@@ -64,34 +65,23 @@ export class RegisterComponent implements OnInit {
     }
 
     this.isSubmitting = true;
+    // formData artık username'i de içeriyor
+    const { confirmPassword, ...formData } = this.registerForm.value;
 
-    // Gerçek uygulamada önce authService.register(formData) çağrılır.
-    // Başarılı olursa, DÖNEN YANITA GÖRE veya ayrıca authService.login() çağrılabilir.
-    // Mock senaryoda, direkt login'i çağırarak otomatik giriş simüle edelim.
-    const { confirmPassword, ...formData } = this.registerForm.value; // confirmPassword'ı ayıkla
-    console.log('Simulating registration and login with:', formData);
-
-    this.authService.login(formData).subscribe({
-      // Login'i çağırıyoruz (mock)
-      next: (success) => {
-        if (success) {
-          this.toastr.success(
-            'Registration successful! You are now logged in.',
-            'Welcome'
-          );
-          this.router.navigate(['/']); // Başarılı girişte ana sayfaya yönlendir
-        } else {
-          this.toastr.error(
-            'Registration succeeded but login failed.',
-            'Warning'
-          );
-          this.isSubmitting = false;
-        }
+    this.authService.register(formData).subscribe({
+      next: (createdUser) => {
+        this.isSubmitting = false;
+        this.toastr.success(
+          `Registration successful for ${createdUser.email}! Please log in.`,
+          'Account Created'
+        );
+        this.router.navigate(['/auth/login']); // Kayıt sonrası login sayfasına yönlendir
       },
       error: (err) => {
-        console.error('Registration/Login error:', err);
+        console.error('Registration error in component:', err);
+        // AuthService'den gelen hata mesajını kullan
         this.toastr.error(
-          err.message || 'An unexpected error occurred during registration.',
+          err.message || 'Registration failed. Please try again.',
           'Registration Failed'
         );
         this.isSubmitting = false;
@@ -99,9 +89,13 @@ export class RegisterComponent implements OnInit {
     });
   }
 
+  // Getter'lar (username için de eklendi)
   get email() {
     return this.registerForm.get('email');
   }
+  get username() {
+    return this.registerForm.get('username');
+  } // Eklendi
   get password() {
     return this.registerForm.get('password');
   }

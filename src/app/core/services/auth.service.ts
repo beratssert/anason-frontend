@@ -1,51 +1,31 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, throwError, timer } from 'rxjs';
 import { delay, map, tap, catchError, switchMap } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
-// User interface GÜNCELLENDİ (created_at? eklendi)
+// User interface
 export interface User {
   id: number;
   username?: string;
   email: string;
   role: 'CUSTOMER' | 'ADMIN' | 'SELLER';
-  created_at?: Date | string; // Kayıt tarihi eklendi (opsiyonel)
+  created_at?: Date | string;
+}
+
+// Login Response Interface
+interface AuthenticationResponse {
+  token: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService implements OnDestroy {
-  private readonly AUTH_STATUS_KEY = 'anason_auth_status';
+  private readonly AUTH_TOKEN_KEY = 'anason_auth_token';
   private readonly AUTH_USER_KEY = 'anason_auth_user';
-
-  // Mock Kullanıcılar GÜNCELLENDİ (created_at eklendi)
-  private mockUsers = [
-    {
-      id: 1,
-      email: 'customer@example.com',
-      password: 'password',
-      role: 'CUSTOMER' as const,
-      username: 'Cust Omer',
-      created_at: new Date('2024-01-15T10:00:00Z'),
-    },
-    {
-      id: 2,
-      email: 'seller@example.com',
-      password: 'password',
-      role: 'SELLER' as const,
-      username: 'Sell Er',
-      created_at: new Date('2024-02-20T11:30:00Z'),
-    },
-    {
-      id: 3,
-      email: 'admin@example.com',
-      password: 'password',
-      role: 'ADMIN' as const,
-      username: 'Admin İstrator',
-      created_at: new Date('2023-12-01T09:00:00Z'),
-    },
-  ];
+  private apiUrl = environment.apiUrl;
 
   private currentUserSubject: BehaviorSubject<User | null>;
   private isLoggedInSubject: BehaviorSubject<boolean>;
@@ -54,11 +34,16 @@ export class AuthService implements OnDestroy {
   public isLoggedIn$: Observable<boolean>;
 
   private storageEventListener: (event: StorageEvent) => void;
+  private httpClient = inject(HttpClient);
+  private router = inject(Router);
 
-  constructor(private router: Router) {
+  constructor() {
     const initialUser = this.loadUserFromStorage();
+    const initialToken = this.loadTokenFromStorage();
     this.currentUserSubject = new BehaviorSubject<User | null>(initialUser);
-    this.isLoggedInSubject = new BehaviorSubject<boolean>(!!initialUser);
+    this.isLoggedInSubject = new BehaviorSubject<boolean>(
+      !!initialToken && !!initialUser
+    );
 
     this.currentUser$ = this.currentUserSubject.asObservable();
     this.isLoggedIn$ = this.isLoggedInSubject.asObservable();
@@ -80,38 +65,43 @@ export class AuthService implements OnDestroy {
   }
 
   private handleStorageChange(event: StorageEvent): void {
-    if (
-      event.key === this.AUTH_STATUS_KEY ||
-      event.key === this.AUTH_USER_KEY
-    ) {
+    if (event.key === this.AUTH_TOKEN_KEY || event.key === this.AUTH_USER_KEY) {
       const user = this.loadUserFromStorage();
+      const token = this.loadTokenFromStorage();
+      const loggedIn = !!token && !!user;
+
       if (
         JSON.stringify(this.currentUserSubject.value) !== JSON.stringify(user)
       ) {
         this.currentUserSubject.next(user);
       }
-      if (this.isLoggedInSubject.value !== !!user) {
-        this.isLoggedInSubject.next(!!user);
+      if (this.isLoggedInSubject.value !== loggedIn) {
+        this.isLoggedInSubject.next(loggedIn);
       }
     }
+  }
+
+  private loadTokenFromStorage(): string | null {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem(this.AUTH_TOKEN_KEY);
+    }
+    return null;
   }
 
   private loadUserFromStorage(): User | null {
     if (typeof localStorage !== 'undefined') {
       const storedUser = localStorage.getItem(this.AUTH_USER_KEY);
-      const storedStatus = localStorage.getItem(this.AUTH_STATUS_KEY);
+      const storedToken = localStorage.getItem(this.AUTH_TOKEN_KEY);
 
-      if (storedUser && storedStatus === 'true') {
+      if (storedUser && storedToken) {
         try {
           const parsedUser = JSON.parse(storedUser);
-          // User interface'ine uygunluğunu kontrol et (created_at dahil)
           if (
             parsedUser &&
             typeof parsedUser.id === 'number' &&
             typeof parsedUser.email === 'string' &&
             typeof parsedUser.role === 'string'
           ) {
-            // Tarihi string ise Date objesine çevir (opsiyonel, ama DatePipe için daha iyi)
             if (
               parsedUser.created_at &&
               typeof parsedUser.created_at === 'string'
@@ -131,7 +121,6 @@ export class AuthService implements OnDestroy {
         }
       }
     }
-    // localStorage'da veri yoksa veya status 'true' değilse temizle
     if (this.currentUserSubject?.value || this.isLoggedInSubject?.value) {
       this.clearAuthDataInternal();
     }
@@ -140,7 +129,7 @@ export class AuthService implements OnDestroy {
 
   private clearAuthDataInternal(): void {
     if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(this.AUTH_STATUS_KEY);
+      localStorage.removeItem(this.AUTH_TOKEN_KEY);
       localStorage.removeItem(this.AUTH_USER_KEY);
     }
     if (this.currentUserSubject && this.currentUserSubject.value !== null) {
@@ -151,67 +140,101 @@ export class AuthService implements OnDestroy {
     }
   }
 
-  private storeAuthData(user: User): void {
-    // mockUsers dizisinden tam kullanıcı objesini bul (şifre dahil olabilir)
-    const userWithPass = this.mockUsers.find((u) => u.id === user.id);
-    if (!userWithPass) return; // Kullanıcı bulunamazsa (teorik olarak olmamalı)
-
-    const { password, ...userDataToStore } = userWithPass; // Şifreyi ayıkla
-
+  private storeAuthData(token: string, user: User): void {
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(this.AUTH_STATUS_KEY, 'true');
+      localStorage.setItem(this.AUTH_TOKEN_KEY, token);
+      const { ...userDataToStore } = user; // Hassas veri olmadan sakla
       localStorage.setItem(this.AUTH_USER_KEY, JSON.stringify(userDataToStore));
     }
-    this.currentUserSubject.next(userDataToStore as User);
+    this.currentUserSubject.next(user);
     this.isLoggedInSubject.next(true);
   }
 
+  private decodeToken(token: string): any | null {
+    try {
+      const payloadBase64 = token.split('.')[1];
+      if (!payloadBase64) return null;
+      const payloadJson = atob(
+        payloadBase64.replace(/-/g, '+').replace(/_/g, '/')
+      ); // Base64 URL safe decode
+      return JSON.parse(payloadJson);
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  }
+
   public get isLoggedIn(): boolean {
-    return this.isLoggedInSubject.getValue();
+    return (
+      !!this.loadTokenFromStorage() && !!this.currentUserSubject.getValue()
+    );
   }
 
   public get currentUserValue(): User | null {
-    return this.currentUserSubject.getValue();
+    return this.isLoggedIn ? this.currentUserSubject.getValue() : null;
   }
 
   login(credentials: {
     email?: string | null;
     password?: string | null;
   }): Observable<User> {
-    console.log('AuthService: Attempting login with', credentials);
-    const email = credentials?.email;
-    const password = credentials?.password;
-
-    if (!email || !password) {
+    const loginUrl = `${this.apiUrl}/users/login`;
+    if (!credentials.email || !credentials.password) {
       return throwError(() => new Error('Email and password are required.'));
     }
+    const payload = {
+      email: credentials.email,
+      password: credentials.password,
+    };
 
-    const foundUser = this.mockUsers.find(
-      (user) => user.email === email && user.password === password
-    );
+    return this.httpClient.post<AuthenticationResponse>(loginUrl, payload).pipe(
+      switchMap((response) => {
+        // switchMap kullanarak token decode işlemini zincire ekle
+        console.log('Login successful, response:', response);
+        if (response && response.token) {
+          const tokenPayload = this.decodeToken(response.token);
+          console.log('Decoded token payload:', tokenPayload); // Payload'ı logla
+          if (tokenPayload && tokenPayload.sub && tokenPayload.role) {
+            // Backend'den user objesi gelmiyorsa, token'dan veya ek bir API çağrısı ile user bilgisi alınmalı.
+            // Şimdilik token'dan alıyoruz, AMA ID'yi de almamız lazım.
+            // Backend JwtUtil.generateToken içine user ID'yi de eklemeli!
+            // Örnek: .claim("userId", user.getId())
+            const user: User = {
+              id: tokenPayload.userId || 0, // Backend'den userId claim'i gelmeli
+              email: tokenPayload.sub,
+              role: tokenPayload.role as User['role'],
+              username: tokenPayload.username || tokenPayload.sub.split('@')[0], // username claim'i varsa kullan
+            };
 
-    return timer(500).pipe(
-      switchMap(() => {
-        if (foundUser) {
-          console.log(
-            'AuthService: Mock login successful for:',
-            foundUser.email,
-            'Role:',
-            foundUser.role
-          );
-          this.storeAuthData(foundUser as User);
-          const { password, ...userToReturn } = foundUser;
-          return of(userToReturn as User);
+            this.storeAuthData(response.token, user);
+            return of(user); // Başarılı login sonrası User objesini döndür
+          } else {
+            console.error(
+              'Token payload is invalid or missing required claims (sub, role, userId).'
+            );
+            this.clearAuthDataInternal();
+            return throwError(
+              () => new Error('Invalid authentication token received.')
+            );
+          }
         } else {
-          console.log('AuthService: Mock login failed for:', email);
+          console.error('Login response missing token.');
           this.clearAuthDataInternal();
-          return throwError(() => new Error('Invalid email or password.'));
+          return throwError(
+            () => new Error('Authentication failed: No token received.')
+          );
         }
       }),
-      catchError((err) => {
-        console.error('Login pipe error:', err.message);
+      catchError((error: HttpErrorResponse) => {
+        console.error('Login HTTP error:', error);
         this.clearAuthDataInternal();
-        return throwError(() => err);
+        let errorMessage = 'Login failed. Please check your credentials.';
+        if (error.status === 401) {
+          errorMessage = 'Invalid email or password.';
+        } else if (error.error && typeof error.error.message === 'string') {
+          errorMessage = error.error.message;
+        }
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -222,14 +245,68 @@ export class AuthService implements OnDestroy {
     this.router.navigate(['/auth/login']);
   }
 
-  hasRole(expectedRole: 'CUSTOMER' | 'ADMIN' | 'SELLER'): boolean {
+  register(userData: any): Observable<User> {
+    const registerUrl = `${this.apiUrl}/users/register`;
+    // userData objesi artık username'i de içeriyor
+    const payload = {
+      username: userData.username,
+      email: userData.email,
+      password: userData.password,
+    };
+
+    console.log('Sending registration payload:', payload);
+
+    return this.httpClient
+      .post<User>(registerUrl, payload) // Backend'den User objesi dönüyor
+      .pipe(
+        tap((createdUser) => {
+          console.log('Registration successful:', createdUser);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Registration HTTP error:', error);
+          let errorMessage = 'Registration failed. Please try again.';
+          if (error.status === 400 && error.error?.message) {
+            // Spring Boot validation hatası mesajını yakala
+            errorMessage = error.error.message;
+          } else if (error.error && typeof error.error === 'string') {
+            // Diğer string hatalar
+            errorMessage = error.error;
+          } else if (
+            error.status === 500 &&
+            error.error?.message &&
+            error.error.message.includes('ConstraintViolationException')
+          ) {
+            // Unique constraint hatası (daha spesifik kontrol edilebilir)
+            if (
+              error.error.message.includes('users_username_key') ||
+              error.error.message.includes('uk_username')
+            ) {
+              // Index/Constraint adını kontrol et
+              errorMessage = 'Username already exists.';
+            } else if (
+              error.error.message.includes('users_email_key') ||
+              error.error.message.includes('uk_email')
+            ) {
+              errorMessage = 'Email already in use.';
+            } else {
+              errorMessage = 'A registration error occurred (Constraint).';
+            }
+          }
+          return throwError(() => new Error(errorMessage));
+        })
+      );
+  }
+
+  public hasRole(expectedRole: 'CUSTOMER' | 'ADMIN' | 'SELLER'): boolean {
     const currentUser = this.currentUserValue;
     return !!currentUser && currentUser.role === expectedRole;
   }
 
-  getUserRole(): string | null {
+  public getUserRole(): string | null {
     return this.currentUserValue?.role || null;
   }
 
-  // register(userData: any): Observable<User | null> { ... }
+  public getToken(): string | null {
+    return this.loadTokenFromStorage();
+  }
 }
