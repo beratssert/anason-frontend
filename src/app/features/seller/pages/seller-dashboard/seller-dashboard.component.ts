@@ -1,15 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core'; // inject eklendi
 import { forkJoin, map } from 'rxjs';
 import { AuthService, User } from '../../../../core/services/auth.service';
-import {
-  OrderService,
-  Order,
-  OrderItem,
-  OrderStatus,
-} from '../../../../core/services/order.service';
+import { OrderService, Order } from '../../../../core/services/order.service'; // Order tipi kaldırıldı (kullanılmıyor)
 import { ProductService } from '../../../../features/product/services/product.service';
 import { ToastrService } from 'ngx-toastr';
-import { Router } from '@angular/router'; // Router eklendi (opsiyonel yönlendirme için)
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-seller-dashboard',
@@ -22,23 +17,21 @@ export class SellerDashboardComponent implements OnInit {
   currentSeller: User | null = null;
   stats: {
     totalProducts: number;
-    totalOrders: number;
+    totalOrders: number; // Bu hala tüm siparişler mi, yoksa satıcıyla ilgili mi? Backend'e bağlı.
     totalRevenue: number;
     pendingOrders: number;
   } | null = null;
 
-  // Grafik Verileri
   orderStatusData: { name: string; value: number }[] = [];
   orderStatusYAxisTicks: number[] = [];
   topSellingProductsData: { name: string; value: number }[] = [];
 
-  constructor(
-    private authService: AuthService,
-    private orderService: OrderService,
-    private productService: ProductService,
-    private toastr: ToastrService,
-    private router: Router
-  ) {}
+  // Inject Dependencies
+  private authService = inject(AuthService);
+  private orderService = inject(OrderService);
+  private productService = inject(ProductService);
+  private toastr = inject(ToastrService);
+  private router = inject(Router);
 
   ngOnInit(): void {
     this.currentSeller = this.authService.currentUserValue;
@@ -47,23 +40,28 @@ export class SellerDashboardComponent implements OnInit {
       (this.currentSeller.role === 'SELLER' ||
         this.currentSeller.role === 'ADMIN')
     ) {
-      this.loadDashboardData(this.currentSeller.id);
+      this.loadDashboardData(this.currentSeller.id); // sellerId argümanı burada kalabilir, çünkü orderService.getOrdersBySellerId onu kullanıyor (şimdilik)
     } else {
       this.toastr.error('Unauthorized access.', 'Error');
       this.isLoading = false;
-      this.router.navigate(['/']); // Yetkisizse ana sayfaya yönlendir
+      this.router.navigate(['/']);
     }
   }
 
   loadDashboardData(sellerId: number): void {
     this.isLoading = true;
     forkJoin({
-      products: this.productService.getProductsBySellerId(sellerId),
+      // --- DÜZELTME (TS2554) ---
+      // getProductsBySellerId argüman almıyor
+      products: this.productService.getProductsBySellerId(),
+      // --- DÜZELTME SONU ---
+      // OrderService'teki getOrdersBySellerId mock olduğu için sellerId alıyor olabilir, onu sonra düzeltiriz.
       orders: this.orderService.getOrdersBySellerId(sellerId),
     })
       .pipe(
         map(({ products, orders }) => {
           const totalProducts = products.length;
+          // totalOrders ve diğer hesaplamalar backend'den dönen order verisine göre yapılmalı
           const totalOrders = orders.length;
           const pendingOrders = orders.filter(
             (o) => o.status === 'PENDING' || o.status === 'PROCESSING'
@@ -72,11 +70,22 @@ export class SellerDashboardComponent implements OnInit {
           let totalRevenue = 0;
           const productSalesQuantity: { [productId: number]: number } = {};
 
+          // Gelir ve satış miktarı hesaplaması
           orders.forEach((order) => {
             if (order.status === 'DELIVERED') {
-              // Sadece teslim edilenler
               order.items.forEach((item) => {
-                if (item.seller_id === sellerId) {
+                // Backend OrderItemDTO'sunda seller_id varsa kontrol et
+                // Eğer yoksa, product bilgisi üzerinden kontrol et (products listesinden)
+                const productInfo = products.find(
+                  (p) => p.id === item.product_id
+                );
+                if (productInfo && productInfo.seller_id === sellerId) {
+                  totalRevenue += item.unit_price * item.quantity;
+                  productSalesQuantity[item.product_id] =
+                    (productSalesQuantity[item.product_id] || 0) +
+                    item.quantity;
+                } else if (item.seller_id === sellerId) {
+                  // Eğer OrderItem'da seller_id varsa
                   totalRevenue += item.unit_price * item.quantity;
                   productSalesQuantity[item.product_id] =
                     (productSalesQuantity[item.product_id] || 0) +
@@ -86,6 +95,7 @@ export class SellerDashboardComponent implements OnInit {
             }
           });
 
+          // Sipariş durumu grafiği
           const statuses = orders.reduce((acc, order) => {
             acc[order.status] = (acc[order.status] || 0) + 1;
             return acc;
@@ -94,33 +104,30 @@ export class SellerDashboardComponent implements OnInit {
             name: status,
             value: statuses[status],
           }));
-
           const orderCounts = orderStatusChartData.map((item) => item.value);
           const maxOrderValue =
             orderCounts.length > 0 ? Math.max(...orderCounts) : 0;
-          const yAxisTicksArray = [];
-          for (let i = 0; i <= maxOrderValue; i++) {
-            yAxisTicksArray.push(i);
-          }
-          if (yAxisTicksArray.length < 2) {
-            yAxisTicksArray.push(1);
-          }
+          const yAxisTicksArray = Array.from(
+            { length: maxOrderValue + 1 },
+            (_, i) => i
+          ); // Y ekseni için tamsayılar
+          if (yAxisTicksArray.length < 2) yAxisTicksArray.push(1);
 
+          // En çok satan ürünler grafiği
           const topSellingProductsChartData = Object.keys(productSalesQuantity)
             .map((productIdStr) => {
               const productId = parseInt(productIdStr, 10);
               const productInfo = products.find((p) => p.id === productId);
               return {
                 name: productInfo
-                  ? productInfo.name.length > 25
-                    ? productInfo.name.substring(0, 22) + '...'
-                    : productInfo.name
-                  : `Product ID ${productId}`, // İsmi kısalt
+                  ? productInfo.name.substring(0, 25) +
+                    (productInfo.name.length > 25 ? '...' : '')
+                  : `P ID ${productId}`,
                 value: productSalesQuantity[productId],
               };
             })
             .sort((a, b) => b.value - a.value)
-            .slice(0, 5); // İlk 5
+            .slice(0, 5);
 
           return {
             stats: { totalProducts, totalOrders, totalRevenue, pendingOrders },
@@ -140,7 +147,10 @@ export class SellerDashboardComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error loading seller dashboard data:', err);
-          this.toastr.error('Failed to load dashboard data.', 'Error');
+          this.toastr.error(
+            err.message || 'Failed to load dashboard data.',
+            'Error'
+          );
           this.isLoading = false;
         },
       });

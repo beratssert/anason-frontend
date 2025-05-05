@@ -1,6 +1,10 @@
-import { Component, OnInit } from '@angular/core';
-import { ProductService } from '../../../../features/product/services/product.service';
+import { Component, OnInit, inject } from '@angular/core'; // inject eklendi
+import {
+  ProductService,
+  Product,
+} from '../../../../features/product/services/product.service'; // Product import edildi
 import { ToastrService } from 'ngx-toastr';
+import { Router } from '@angular/router'; // Router import edildi
 
 @Component({
   selector: 'app-admin-product-management',
@@ -9,14 +13,14 @@ import { ToastrService } from 'ngx-toastr';
   standalone: false,
 })
 export class AdminProductManagementComponent implements OnInit {
-  allProducts: any[] = [];
+  allProducts: Product[] = []; // Tip Product[] yapıldı
   isLoading: boolean = true;
   deletingProductId: number | null = null;
 
-  constructor(
-    private productService: ProductService,
-    private toastr: ToastrService
-  ) {}
+  // Inject Dependencies
+  private productService = inject(ProductService);
+  private toastr = inject(ToastrService);
+  private router = inject(Router); // Router inject edildi
 
   ngOnInit(): void {
     this.loadAllProducts();
@@ -25,29 +29,31 @@ export class AdminProductManagementComponent implements OnInit {
   loadAllProducts(): void {
     this.isLoading = true;
     this.productService.getProducts().subscribe({
-      // getProducts() tüm ürünleri getirir
       next: (data) => {
-        // Tarihleri Date objesine çevirmek iyi olabilir (eğer sıralama vs. yapılacaksa)
-        this.allProducts = data.map((p) => ({
-          ...p,
-          created_at: new Date(p.created_at),
-        }));
+        // Service zaten tarihi mapliyor, burada tekrar maplemeye gerek yok.
+        // Eğer TS hatası devam ederse, DİKKATLİCE burada map'leyebiliriz:
+        // this.allProducts = data.map((p) => ({
+        //   ...p,
+        //   created_at: p.created_at ? new Date(p.created_at) : undefined, // Güvenlik kontrolü
+        // }));
+        this.allProducts = data; // Service'ten geleni doğrudan ata
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Error loading all products:', err);
-        this.toastr.error('Failed to load products.', 'Error');
+        this.toastr.error(err.message || 'Failed to load products.', 'Error');
         this.isLoading = false;
       },
     });
   }
 
-  deleteProduct(product: any): void {
+  deleteProduct(product: Product): void {
+    // Tip Product yapıldı
     if (!product) return;
 
     if (
       !confirm(
-        `ADMIN ACTION: Are you sure you want to delete product "${product.name}" (ID: ${product.id}, Seller: ${product.seller_id})? This action cannot be undone.`
+        `ADMIN ACTION: Are you sure you want to delete product "${product.name}" (ID: ${product.id})? This action cannot be undone.`
       )
     ) {
       return;
@@ -57,27 +63,22 @@ export class AdminProductManagementComponent implements OnInit {
 
     // Admin'e özel silme metodunu çağır
     this.productService.deleteProductByIdAsAdmin(product.id).subscribe({
-      next: (success) => {
-        if (success) {
-          this.toastr.success(
-            `Product "${product.name}" deleted successfully by Admin.`,
-            'Success'
-          );
-          this.allProducts = this.allProducts.filter(
-            (p) => p.id !== product.id
-          );
-        } else {
-          this.toastr.error(
-            `Failed to delete product "${product.name}". It might already be deleted.`,
-            'Error'
-          );
-        }
-        this.deletingProductId = null;
+      // --- DÜZELTME (TS1345) ---
+      // next callback'i çalışırsa başarılı kabul et, 'success' parametresi yok
+      next: () => {
+        this.toastr.success(
+          `Product "${product.name}" deleted successfully by Admin.`,
+          'Success'
+        );
+        // Ürünü listeden filtrele
+        this.allProducts = this.allProducts.filter((p) => p.id !== product.id);
+        this.deletingProductId = null; // İşlem bitti
       },
+      // --- DÜZELTME SONU ---
       error: (err) => {
         console.error(`Error deleting product ${product.id} by Admin:`, err);
         this.toastr.error(
-          'An error occurred while deleting the product.',
+          err.message || 'An error occurred while deleting the product.',
           'Error'
         );
         this.deletingProductId = null;
@@ -85,6 +86,8 @@ export class AdminProductManagementComponent implements OnInit {
     });
   }
 
-  // İleride Admin'in ürün düzenlemesi için metot eklenebilir
-  // goToEditProductAsAdmin(productId: number): void { ... }
+  // Admin'in ürün düzenleme sayfasına gitmesi için
+  goToEditProductAsAdmin(productId: number): void {
+    this.router.navigate(['/admin/products', productId, 'edit']);
+  }
 }

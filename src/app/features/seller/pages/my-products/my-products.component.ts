@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core'; // inject eklendi
 import { Router } from '@angular/router';
 import { AuthService, User } from '../../../../core/services/auth.service';
-import { ProductService } from '../../../../features/product/services/product.service';
+import {
+  ProductService,
+  Product,
+} from '../../../../features/product/services/product.service'; // Product import edildi
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -11,17 +14,16 @@ import { ToastrService } from 'ngx-toastr';
   standalone: false,
 })
 export class MyProductsComponent implements OnInit {
-  myProducts: any[] = [];
+  myProducts: Product[] = []; // Tip Product[] yapıldı
   isLoading: boolean = true;
   currentSeller: User | null = null;
   deletingProductId: number | null = null;
 
-  constructor(
-    private productService: ProductService,
-    private authService: AuthService,
-    private toastr: ToastrService,
-    private router: Router
-  ) {}
+  // Inject Dependencies
+  private productService = inject(ProductService);
+  private authService = inject(AuthService);
+  private toastr = inject(ToastrService);
+  private router = inject(Router);
 
   ngOnInit(): void {
     this.currentSeller = this.authService.currentUserValue;
@@ -30,33 +32,41 @@ export class MyProductsComponent implements OnInit {
       (this.currentSeller.role === 'SELLER' ||
         this.currentSeller.role === 'ADMIN')
     ) {
-      this.loadProducts(this.currentSeller.id);
+      this.loadProducts(); // Argüman kaldırıldı
     } else {
       this.toastr.error(
         'You do not have permission to view this page.',
         'Unauthorized'
       );
       this.isLoading = false;
-      this.router.navigate(['/']); // Yetkisizse ana sayfaya yönlendir
+      this.router.navigate(['/']);
     }
   }
 
-  loadProducts(sellerId: number): void {
+  loadProducts(): void {
+    // Argüman kaldırıldı
     this.isLoading = true;
-    this.productService.getProductsBySellerId(sellerId).subscribe({
+    // --- DÜZELTME (TS2554) ---
+    // getProductsBySellerId artık argüman almıyor
+    this.productService.getProductsBySellerId().subscribe({
+      // --- DÜZELTME SONU ---
       next: (data) => {
-        this.myProducts = data;
+        this.myProducts = data; // Service zaten mapliyor
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Error loading seller products:', err);
-        this.toastr.error('Failed to load your products.', 'Error');
+        this.toastr.error(
+          err.message || 'Failed to load your products.',
+          'Error'
+        );
         this.isLoading = false;
       },
     });
   }
 
-  deleteProduct(product: any): void {
+  deleteProduct(product: Product): void {
+    // Tip Product yapıldı
     if (!this.currentSeller || !product) return;
 
     if (
@@ -69,35 +79,31 @@ export class MyProductsComponent implements OnInit {
 
     this.deletingProductId = product.id;
 
-    this.productService
-      .deleteProduct(product.id, this.currentSeller.id)
-      .subscribe({
-        next: (success) => {
-          if (success) {
-            this.toastr.success(
-              `Product "${product.name}" deleted successfully.`,
-              'Success'
-            );
-            this.myProducts = this.myProducts.filter(
-              (p) => p.id !== product.id
-            );
-          } else {
-            this.toastr.error(
-              `Failed to delete product "${product.name}".`,
-              'Error'
-            );
-          }
-          this.deletingProductId = null;
-        },
-        error: (err) => {
-          console.error(`Error deleting product ${product.id}:`, err);
-          this.toastr.error(
-            'An error occurred while deleting the product.',
-            'Error'
-          );
-          this.deletingProductId = null;
-        },
-      });
+    // --- DÜZELTME (TS2554) ---
+    // deleteProduct artık sadece productId alıyor
+    this.productService.deleteProduct(product.id).subscribe({
+      // --- DÜZELTME SONU ---
+
+      // --- DÜZELTME (TS1345) ---
+      // next callback'i çalışırsa başarılı kabul et
+      next: () => {
+        this.toastr.success(
+          `Product "${product.name}" deleted successfully.`,
+          'Success'
+        );
+        this.myProducts = this.myProducts.filter((p) => p.id !== product.id);
+        this.deletingProductId = null;
+      },
+      // --- DÜZELTME SONU ---
+      error: (err) => {
+        console.error(`Error deleting product ${product.id}:`, err);
+        this.toastr.error(
+          err.message || 'An error occurred while deleting the product.',
+          'Error'
+        );
+        this.deletingProductId = null;
+      },
+    });
   }
 
   goToAddProduct(): void {

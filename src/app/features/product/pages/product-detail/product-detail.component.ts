@@ -1,12 +1,19 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router'; // Router eklendi
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ProductService } from '../../services/product.service';
+import {
+  ProductService,
+  Product,
+  Review,
+  ProductAttribute,
+  AddReviewPayload,
+} from '../../services/product.service'; // Tipler import
 import { CartService } from '../../../../core/services/cart.service';
-import { ToastrService } from 'ngx-toastr'; // ToastrService import edildi
-import { Observable, of, forkJoin } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
+import { forkJoin, of } from 'rxjs'; // of eklendi
+import { switchMap, catchError } from 'rxjs/operators'; // catchError eklendi
 import { ComparisonService } from '../../../../core/services/comparison.service';
+import { AuthService, User } from '../../../../core/services/auth.service'; // User import edildi
 
 @Component({
   selector: 'app-product-detail',
@@ -15,32 +22,35 @@ import { ComparisonService } from '../../../../core/services/comparison.service'
   standalone: false,
 })
 export class ProductDetailComponent implements OnInit {
-  product: any | null = null;
-  reviews: any[] = [];
-  attributes: any[] = [];
+  product: Product | null = null;
+  reviews: Review[] = [];
+  attributes: ProductAttribute[] = [];
   quantity: number = 1;
   reviewForm!: FormGroup;
   isLoading: boolean = true;
-  errorLoading: boolean = false;
+  errorLoading: string | null = null;
   isSubmittingReview: boolean = false;
+  currentUser: User | null = null; // Current user eklendi
 
-  constructor(
-    private route: ActivatedRoute,
-    private productService: ProductService,
-    private fb: FormBuilder,
-    private cartService: CartService,
-    private toastr: ToastrService,
-    private comparisonService: ComparisonService
-  ) {}
+  // Inject Dependencies
+  private route = inject(ActivatedRoute);
+  private router = inject(Router); // Router inject edildi
+  private productService = inject(ProductService);
+  private fb = inject(FormBuilder);
+  private cartService = inject(CartService);
+  private toastr = inject(ToastrService);
+  private comparisonService = inject(ComparisonService);
+  private authService = inject(AuthService);
 
   ngOnInit(): void {
+    this.currentUser = this.authService.currentUserValue; // Kullanıcı bilgisini al
     this.loadProductDetails();
     this.createReviewForm();
   }
 
   loadProductDetails(): void {
     this.isLoading = true;
-    this.errorLoading = false;
+    this.errorLoading = null;
     this.product = null;
     this.reviews = [];
     this.attributes = [];
@@ -49,29 +59,29 @@ export class ProductDetailComponent implements OnInit {
       .pipe(
         switchMap((params) => {
           const idParam = params.get('id');
-          if (idParam) {
-            const id = parseInt(idParam, 10);
-            if (!isNaN(id)) {
-              return forkJoin({
-                product: this.productService.getProductById(id),
-                reviews: this.productService.getReviewsByProductId(id),
-                attributes: this.productService.getAttributesByProductId(id),
-              }).pipe(
-                catchError((err) => {
-                  console.error('Error fetching product details:', err);
-                  this.errorLoading = true;
-                  return of({
-                    product: undefined,
-                    reviews: [],
-                    attributes: [],
-                  });
-                })
-              );
-            }
+          if (!idParam) {
+            this.errorLoading = 'Product ID is missing.';
+            return of({ product: undefined, reviews: [], attributes: [] });
           }
-          console.error('Invalid or missing Product ID parameter.');
-          this.errorLoading = true;
-          return of({ product: undefined, reviews: [], attributes: [] });
+          const id = parseInt(idParam, 10);
+          if (isNaN(id)) {
+            this.errorLoading = 'Invalid Product ID.';
+            return of({ product: undefined, reviews: [], attributes: [] });
+          }
+          // Tüm detayları paralel çek
+          return forkJoin({
+            product: this.productService.getProductById(id),
+            reviews: this.productService.getReviewsByProductId(id),
+            attributes: this.productService.getAttributesByProductId(id),
+          }).pipe(
+            catchError((err) => {
+              // Ana forkJoin için de hata yakalama
+              console.error('Error fetching product details:', err);
+              this.errorLoading =
+                err.message || 'Failed to load product details.';
+              return of({ product: undefined, reviews: [], attributes: [] });
+            })
+          );
         })
       )
       .subscribe(({ product, reviews, attributes }) => {
@@ -81,10 +91,11 @@ export class ProductDetailComponent implements OnInit {
           this.reviews = reviews;
           this.attributes = attributes;
           this.quantity = 1;
-        } else {
-          this.product = null;
-          this.reviews = [];
-          this.attributes = [];
+        } else if (!this.errorLoading) {
+          this.errorLoading = 'Product not found.';
+        }
+        if (this.errorLoading) {
+          this.toastr.error(this.errorLoading, 'Error');
         }
       });
   }
@@ -104,30 +115,44 @@ export class ProductDetailComponent implements OnInit {
       this.reviewForm.markAllAsTouched();
       return;
     }
+    if (!this.currentUser) {
+      this.toastr.warning(
+        'Please log in to submit a review.',
+        'Login Required'
+      );
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
 
     this.isSubmittingReview = true;
-    const mockUserId = 205;
-
-    const reviewData = {
-      productId: this.product.id,
-      userId: mockUserId,
+    const payload: AddReviewPayload = {
       rating: this.reviewForm.value.rating,
       comment: this.reviewForm.value.comment,
     };
 
-    this.productService.addReview(reviewData).subscribe({
+    this.productService.addReview(this.product.id, payload).subscribe({
       next: (newReview) => {
-        this.reviews.unshift(newReview);
+        this.reviews.unshift(newReview); // Yeni yorumu başa ekle
         this.reviewForm.reset();
-        this.toastr.success('Review submitted successfully!', 'Success'); // Toastr kullanıldı
+        // Formun validasyon durumunu temizle
+        Object.keys(this.reviewForm.controls).forEach((key) => {
+          this.reviewForm.get(key)?.setErrors(null);
+          this.reviewForm.get(key)?.markAsPristine();
+          this.reviewForm.get(key)?.markAsUntouched();
+        });
+        this.reviewForm.updateValueAndValidity();
+
+        this.toastr.success('Review submitted successfully!', 'Success');
         this.isSubmittingReview = false;
       },
       error: (err) => {
-        console.error('Error submitting review (mock):', err);
+        console.error('Error submitting review:', err);
         this.toastr.error(
-          'Failed to submit review. Please try again.',
+          err.message || 'Failed to submit review. Please try again.',
           'Error'
-        ); // Toastr kullanıldı
+        );
         this.isSubmittingReview = false;
       },
     });
@@ -146,15 +171,17 @@ export class ProductDetailComponent implements OnInit {
   }
 
   addToCart(): void {
-    if (this.product && this.product.stock_quantity > 0 && this.quantity > 0) {
+    if (
+      this.product &&
+      this.product.stock_quantity >= this.quantity &&
+      this.quantity > 0
+    ) {
       this.cartService.addItem(this.product, this.quantity);
-      // alert yerine toastr kullanıldı
       this.toastr.success(
         `${this.quantity} x ${this.product.name} added to cart!`,
         'Added to Cart'
       );
     } else {
-      // alert yerine toastr kullanıldı
       this.toastr.error(
         'Cannot add this item to cart. Check stock or quantity.',
         'Error'
@@ -163,8 +190,7 @@ export class ProductDetailComponent implements OnInit {
   }
 
   addToCompare(): void {
-    if (!this.product) return; // Ürün yüklenmemişse çık
-
+    if (!this.product) return;
     const success = this.comparisonService.addToCompare(this.product.id);
     if (success) {
       this.toastr.success(

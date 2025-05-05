@@ -1,438 +1,216 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
-import { delay, map, catchError } from 'rxjs/operators';
+import { Injectable, inject } from '@angular/core';
+import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { Observable, throwError, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 
-// Interface'ler (Gerekirse ayrı bir dosyaya taşınabilir)
-export interface AdminManagedUser {
+// --- INTERFACES ---
+export interface Product {
   id: number;
+  seller_id: number;
+  name: string;
+  description?: string;
+  price: number;
+  stock_quantity: number;
+  category?: string;
+  image_url?: string;
+  created_at?: Date | string;
+}
+
+export interface Review {
+  id: number;
+  user_id: number;
   username?: string;
-  email: string;
-  role: 'CUSTOMER' | 'ADMIN' | 'SELLER';
-  status: 'ACTIVE' | 'BANNED';
+  rating: number;
+  comment: string;
   created_at: Date | string;
 }
+
+export interface ProductAttribute {
+  name: string;
+  value: string;
+}
+
+export interface ProductFilterOptions {
+  categories: string[];
+  priceRange: { min: number; max: number };
+}
+
+export interface AddReviewPayload {
+  rating: number;
+  comment: string;
+}
+
+export type ProductPayload = Omit<Product, 'id' | 'created_at' | 'seller_id'>;
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProductService {
-  private readonly PRODUCT_STORAGE_KEY = 'anason_mock_products';
+  private apiUrl = environment.apiUrl;
+  private httpClient = inject(HttpClient);
 
-  // Mock data (Reviews, Attributes, Values şimdilik localStorage'a yazılmıyor)
-  private mockReviews: any[] = [
-    {
-      id: 101,
-      product_id: 1,
-      user_id: 201,
-      username: 'Alice',
-      rating: 5,
-      comment: 'Excellent smartwatch, battery life is amazing!',
-      created_at: new Date('2024-04-25T10:30:00'),
-    },
-    {
-      id: 102,
-      product_id: 3,
-      user_id: 202,
-      username: 'Bob',
-      rating: 4,
-      comment: 'Great sound quality, but a bit pricey.',
-      created_at: new Date('2024-04-22T14:00:00'),
-    },
-    {
-      id: 103,
-      product_id: 1,
-      user_id: 203,
-      username: 'Charlie',
-      rating: 4,
-      comment:
-        'Lots of features, still exploring them all. Happy with the purchase.',
-      created_at: new Date('2024-04-26T09:15:00'),
-    },
-    {
-      id: 104,
-      product_id: 2,
-      user_id: 201,
-      username: 'Alice',
-      rating: 5,
-      comment: 'Very soft and comfortable t-shirt. Fits perfectly.',
-      created_at: new Date('2024-04-18T11:00:00'),
-    },
-    {
-      id: 105,
-      product_id: 4,
-      user_id: 204,
-      username: 'David',
-      rating: 3,
-      comment: 'Mugs look nice, but one arrived chipped.',
-      created_at: new Date('2024-04-01T16:45:00'),
-    },
-    {
-      id: 106,
-      product_id: 3,
-      user_id: 201,
-      username: 'Alice',
-      rating: 5,
-      comment: 'Noise cancellation works wonders on my commute!',
-      created_at: new Date('2024-04-28T08:00:00'),
-    },
-  ];
-  private mockAttributes: any[] = [
-    { id: 1, name: 'Color', data_type: 'STRING', category: 'Clothing' },
-    { id: 2, name: 'Size', data_type: 'STRING', category: 'Clothing' },
-    { id: 3, name: 'Material', data_type: 'STRING', category: 'Clothing' },
-    {
-      id: 4,
-      name: 'Screen Size (inch)',
-      data_type: 'DECIMAL',
-      category: 'Electronics',
-    },
-    {
-      id: 5,
-      name: 'Water Resistance',
-      data_type: 'STRING',
-      category: 'Electronics',
-    },
-    {
-      id: 6,
-      name: 'Capacity (ml)',
-      data_type: 'INTEGER',
-      category: 'Home & Garden',
-    },
-    {
-      id: 7,
-      name: 'Bluetooth Version',
-      data_type: 'STRING',
-      category: 'Electronics',
-    },
-    {
-      id: 8,
-      name: 'Sole Material',
-      data_type: 'STRING',
-      category: 'Shoes & Bags',
-    },
-  ];
-  private mockAttributeValues: any[] = [
-    { id: 201, product_id: 1, attribute_id: 4, value: '1.78' },
-    { id: 202, product_id: 1, attribute_id: 5, value: '5 ATM' },
-    { id: 203, product_id: 1, attribute_id: 7, value: '5.2' },
-    { id: 204, product_id: 2, attribute_id: 1, value: 'White' },
-    { id: 205, product_id: 2, attribute_id: 2, value: 'M' },
-    { id: 206, product_id: 2, attribute_id: 3, value: 'Organic Cotton' },
-    { id: 207, product_id: 3, attribute_id: 1, value: 'Black' },
-    { id: 208, product_id: 3, attribute_id: 5, value: 'IPX4' },
-    { id: 209, product_id: 3, attribute_id: 7, value: '5.0' },
-    { id: 210, product_id: 4, attribute_id: 6, value: '350' },
-    { id: 211, product_id: 4, attribute_id: 3, value: 'Ceramic' },
-    { id: 212, product_id: 5, attribute_id: 1, value: 'Blue/Gray' },
-    { id: 213, product_id: 5, attribute_id: 2, value: '43' },
-    { id: 214, product_id: 5, attribute_id: 8, value: 'Rubber' },
-  ];
+  constructor() {}
 
-  // mockProducts artık constructor'da localStorage'dan yükleniyor
-  private mockProducts: any[];
+  // --- Public Product Methods ---
 
-  constructor() {
-    this.mockProducts = this.loadProductsFromStorage();
+  getProducts(): Observable<Product[]> {
+    const url = `${this.apiUrl}/products`;
+    return this.httpClient.get<Product[]>(url).pipe(
+      map((products) => products.map(this.mapProductDates)),
+      catchError(this.handleError)
+    );
   }
 
-  private loadProductsFromStorage(): any[] {
-    if (typeof localStorage !== 'undefined') {
-      const storedProducts = localStorage.getItem(this.PRODUCT_STORAGE_KEY);
-      if (storedProducts) {
-        try {
-          const parsedProducts = JSON.parse(storedProducts);
-          if (Array.isArray(parsedProducts)) {
-            return parsedProducts.map((p) => ({
-              ...p,
-              created_at: p.created_at ? new Date(p.created_at) : undefined,
-            }));
-          } else {
-            localStorage.removeItem(this.PRODUCT_STORAGE_KEY);
-          }
-        } catch (e) {
-          console.error('Error parsing products from localStorage', e);
-          localStorage.removeItem(this.PRODUCT_STORAGE_KEY);
+  getProductById(id: number): Observable<Product | undefined> {
+    const url = `${this.apiUrl}/products/${id}`;
+    return this.httpClient.get<Product>(url).pipe(
+      map(this.mapProductDates),
+      catchError((error) => {
+        if (error.status === 404) {
+          return of(undefined);
         }
-      }
-    }
-    return this.getDefaultMockProducts();
+        return this.handleError(error);
+      })
+    );
   }
 
-  private saveProductsToStorage(): void {
-    if (typeof localStorage !== 'undefined') {
-      try {
-        localStorage.setItem(
-          this.PRODUCT_STORAGE_KEY,
-          JSON.stringify(this.mockProducts)
+  getReviewsByProductId(productId: number): Observable<Review[]> {
+    // Varsayım: Backend endpoint -> GET /api/products/{productId}/reviews
+    const url = `${this.apiUrl}/products/${productId}/reviews`;
+    return this.httpClient.get<Review[]>(url).pipe(
+      map((reviews) =>
+        reviews.map((r) => ({ ...r, created_at: new Date(r.created_at) }))
+      ),
+      catchError(this.handleError)
+    );
+  }
+
+  getAttributesByProductId(productId: number): Observable<ProductAttribute[]> {
+    // Varsayım: Backend endpoint -> GET /api/products/{productId}/attributes
+    const url = `${this.apiUrl}/products/${productId}/attributes`;
+    return this.httpClient
+      .get<ProductAttribute[]>(url)
+      .pipe(catchError(this.handleError));
+  }
+
+  addReview(
+    productId: number,
+    reviewData: AddReviewPayload
+  ): Observable<Review> {
+    // Varsayım: Backend endpoint -> POST /api/products/{productId}/reviews (Auth Gerekli)
+    const url = `${this.apiUrl}/products/${productId}/reviews`;
+    return this.httpClient.post<Review>(url, reviewData).pipe(
+      map((r) => ({ ...r, created_at: new Date(r.created_at) })),
+      catchError(this.handleError)
+    );
+  }
+
+  getFilterOptions(): Observable<ProductFilterOptions> {
+    // Varsayım: Backend endpoint -> GET /api/products/filters
+    const url = `${this.apiUrl}/products/filters`;
+    const defaultOptions: ProductFilterOptions = {
+      categories: [],
+      priceRange: { min: 0, max: 1000 },
+    };
+    return this.httpClient.get<ProductFilterOptions>(url).pipe(
+      catchError((err) => {
+        console.error(
+          'Error fetching filter options, returning defaults.',
+          err
         );
-      } catch (e) {
-        console.error('Error saving products to localStorage', e);
-      }
-    }
-  }
-
-  private getDefaultMockProducts(): any[] {
-    return [
-      {
-        id: 1,
-        seller_id: 101,
-        name: 'Smartwatch Pro X',
-        description: 'Latest generation smartwatch...',
-        price: 199.99,
-        stock_quantity: 50,
-        category: 'Electronics',
-        image_url: 'assets/images/placeholder.png',
-        created_at: new Date('2024-04-20'),
-      },
-      {
-        id: 2,
-        seller_id: 102,
-        name: 'Organic Cotton T-Shirt',
-        description: 'Comfortable and sustainable t-shirt...',
-        price: 25.5,
-        stock_quantity: 120,
-        category: 'Clothing',
-        image_url: 'assets/images/placeholder.png',
-        created_at: new Date('2024-04-15'),
-      },
-      {
-        id: 3,
-        seller_id: 101,
-        name: 'Wireless Noise-Cancelling Headphones',
-        description: 'Immersive sound experience...',
-        price: 149.0,
-        stock_quantity: 30,
-        category: 'Electronics',
-        image_url: 'assets/images/placeholder.png',
-        created_at: new Date('2024-04-10'),
-      },
-      {
-        id: 4,
-        seller_id: 103,
-        name: 'Ceramic Coffee Mug Set (Set of 4)',
-        description: 'Stylish and durable ceramic mugs...',
-        price: 35.99,
-        stock_quantity: 80,
-        category: 'Home & Garden',
-        image_url: 'assets/images/placeholder.png',
-        created_at: new Date('2024-03-25'),
-      },
-      {
-        id: 5,
-        seller_id: 102,
-        name: 'Running Shoes - Model Runner',
-        description: 'Lightweight and breathable running shoes...',
-        price: 89.9,
-        stock_quantity: 0,
-        category: 'Shoes & Bags',
-        image_url: 'assets/images/placeholder.png',
-        created_at: new Date('2024-03-11'),
-      },
-      {
-        id: 6,
-        seller_id: 101,
-        name: 'Smartphone Holder Grip',
-        description: 'Secure phone grip and stand.',
-        price: 9.99,
-        stock_quantity: 200,
-        category: 'Electronics',
-        image_url: 'assets/images/placeholder.png',
-        created_at: new Date('2024-05-01'),
-      },
-      {
-        id: 7,
-        seller_id: 102,
-        name: 'Bamboo Cutting Board',
-        description: 'Eco-friendly and durable cutting board.',
-        price: 19.95,
-        stock_quantity: 65,
-        category: 'Home & Garden',
-        image_url: 'assets/images/placeholder.png',
-        created_at: new Date('2024-04-28'),
-      },
-    ];
-  }
-
-  getProducts(): Observable<any[]> {
-    return of(this.mockProducts).pipe(delay(100));
-  }
-
-  getProductById(id: number): Observable<any | undefined> {
-    const product = this.mockProducts.find((p) => p.id === id);
-    return of(product).pipe(delay(100));
-  }
-
-  getReviewsByProductId(productId: number): Observable<any[]> {
-    const reviews = this.mockReviews.filter((r) => r.product_id === productId);
-    return of(reviews).pipe(delay(150));
-  }
-
-  getAttributesByProductId(productId: number): Observable<any[]> {
-    const attributeValues = this.mockAttributeValues.filter(
-      (val) => val.product_id === productId
+        return of(defaultOptions);
+      })
     );
-    const productAttributes = attributeValues.map((val) => {
-      const attribute = this.mockAttributes.find(
-        (attr) => attr.id === val.attribute_id
-      );
-      return {
-        name: attribute ? attribute.name : 'Unknown Attribute',
-        value: val.value,
-      };
-    });
-    return of(productAttributes).pipe(delay(50));
   }
 
-  addReview(reviewData: {
-    productId: number;
-    userId: number;
-    rating: number;
-    comment: string;
-  }): Observable<any> {
-    const newReviewId = Math.max(0, ...this.mockReviews.map((r) => r.id)) + 1;
-    const newReview = {
-      id: newReviewId,
-      product_id: reviewData.productId,
-      user_id: reviewData.userId,
-      username: `User_${reviewData.userId}`,
-      rating: reviewData.rating,
-      comment: reviewData.comment,
-      created_at: new Date(),
-    };
-    this.mockReviews.push(newReview);
-    return of(newReview).pipe(delay(200));
-  }
+  // --- SELLER Methods ---
 
-  getFilterOptions(): Observable<{
-    categories: string[];
-    priceRange: { min: number; max: number };
-  }> {
-    const categories = [
-      ...new Set(this.mockProducts.map((p) => p.category)),
-    ].sort();
-    const prices = this.mockProducts.map((p) => p.price);
-    const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-    const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-    const filterOptions = {
-      categories: categories,
-      priceRange: { min: minPrice, max: maxPrice },
-    };
-    return of(filterOptions).pipe(delay(80));
-  }
-
-  getProductsBySellerId(sellerId: number): Observable<any[]> {
-    const sellerProducts = this.mockProducts.filter(
-      (p) => p.seller_id === sellerId
+  getProductsBySellerId(): Observable<Product[]> {
+    // Varsayım: Backend endpoint -> GET /api/seller/products (Auth Gerekli)
+    // Backend token'dan sellerId'yi almalı
+    const url = `${this.apiUrl}/seller/products`;
+    return this.httpClient.get<Product[]>(url).pipe(
+      map((products) => products.map(this.mapProductDates)),
+      catchError(this.handleError)
     );
-    return of(sellerProducts).pipe(delay(50));
   }
 
-  deleteProduct(productId: number, sellerId: number): Observable<boolean> {
-    const initialLength = this.mockProducts.length;
-    this.mockProducts = this.mockProducts.filter(
-      (p) => !(p.id === productId && p.seller_id === sellerId)
-    );
-    if (this.mockProducts.length < initialLength) {
-      this.saveProductsToStorage();
-      return of(true).pipe(delay(300));
-    } else {
-      return of(false).pipe(delay(300));
-    }
-  }
-
-  deleteProductByIdAsAdmin(productId: number): Observable<boolean> {
-    console.log(
-      `ProductService (Mock): [ADMIN] Attempting to delete product ${productId}`
-    );
-    const initialLength = this.mockProducts.length;
-    this.mockProducts = this.mockProducts.filter((p) => p.id !== productId); // Sadece ID ile filtrele
-
-    if (this.mockProducts.length < initialLength) {
-      this.saveProductsToStorage(); // Değişikliği kaydet
-      console.log(`Product ${productId} deleted successfully by Admin.`);
-      return of(true).pipe(delay(300));
-    } else {
-      console.error(`[ADMIN] Product ${productId} not found for deletion.`);
-      return of(false).pipe(delay(300));
-    }
-  }
-
-  addProduct(productData: any, sellerId: number): Observable<any> {
-    const newId =
-      this.mockProducts.length > 0
-        ? Math.max(...this.mockProducts.map((p) => p.id)) + 1
-        : 1;
-    const newProduct = {
-      id: newId,
-      seller_id: sellerId,
-      name: productData.name,
-      description: productData.description,
-      price: productData.price,
-      stock_quantity: productData.stock_quantity,
-      category: productData.category,
-      image_url: productData.image_url || 'assets/images/placeholder.png',
-      created_at: new Date(),
-    };
-    this.mockProducts.push(newProduct);
-    this.saveProductsToStorage();
-    return of(newProduct).pipe(delay(400));
+  addProduct(productData: ProductPayload): Observable<Product> {
+    // Endpoint: POST /api/seller/product-create (Auth Gerekli)
+    const url = `${this.apiUrl}/seller/product-create`;
+    return this.httpClient
+      .post<Product>(url, productData)
+      .pipe(map(this.mapProductDates), catchError(this.handleError));
   }
 
   updateProduct(
     productId: number,
-    productData: any,
-    sellerId: number
-  ): Observable<any | null> {
-    const productIndex = this.mockProducts.findIndex(
-      (p) => p.id === productId && p.seller_id === sellerId
-    );
-    if (productIndex > -1) {
-      const existingProduct = this.mockProducts[productIndex];
-      const updatedProduct = {
-        ...existingProduct,
-        name: productData.name,
-        description: productData.description,
-        price: productData.price,
-        stock_quantity: productData.stock_quantity,
-        category: productData.category,
-        image_url: productData.image_url || existingProduct.image_url,
-      };
-      this.mockProducts[productIndex] = updatedProduct;
-      this.saveProductsToStorage();
-      return of(updatedProduct).pipe(delay(400));
-    } else {
-      return of(null).pipe(delay(400));
-    }
+    productData: Partial<ProductPayload>
+  ): Observable<Product> {
+    // Endpoint: PUT /api/seller/product-update/{id} (Auth Gerekli)
+    const url = `${this.apiUrl}/seller/product-update/${productId}`;
+    return this.httpClient
+      .put<Product>(url, productData)
+      .pipe(map(this.mapProductDates), catchError(this.handleError));
   }
+
+  deleteProduct(productId: number): Observable<void> {
+    // Endpoint: DELETE /api/seller/product-delete/{id} (Auth Gerekli)
+    const url = `${this.apiUrl}/seller/product-delete/${productId}`;
+    return this.httpClient.delete<void>(url).pipe(catchError(this.handleError));
+  }
+
+  // --- ADMIN Methods ---
 
   updateProductAsAdmin(
     productId: number,
-    productData: any
-  ): Observable<any | null> {
-    console.log(
-      `ProductService (Mock): [ADMIN] Attempting to update product ${productId}`,
-      productData
-    );
-    const productIndex = this.mockProducts.findIndex((p) => p.id === productId); // Sadece ID ile bul
+    productData: Partial<ProductPayload>
+  ): Observable<Product> {
+    // Varsayım: Backend endpoint -> PUT /api/admin/products/{id} (Auth Gerekli)
+    // VEYA Seller endpoint'i kullanılacaksa backend yetki kontrolü yapmalı.
+    const url = `${this.apiUrl}/admin/products/${productId}`; // Gerekirse düzeltin
+    return this.httpClient
+      .put<Product>(url, productData)
+      .pipe(map(this.mapProductDates), catchError(this.handleError));
+  }
 
-    if (productIndex > -1) {
-      const existingProduct = this.mockProducts[productIndex];
-      const updatedProduct = {
-        ...existingProduct, // Mevcut verileri koru (id, seller_id, created_at)
-        name: productData.name,
-        description: productData.description,
-        price: productData.price,
-        stock_quantity: productData.stock_quantity,
-        category: productData.category,
-        image_url: productData.image_url || existingProduct.image_url,
-      };
-      this.mockProducts[productIndex] = updatedProduct;
-      this.saveProductsToStorage(); // localStorage'a kaydet
-      console.log('[ADMIN] Product updated in mock list:', updatedProduct);
-      return of(updatedProduct).pipe(delay(400));
+  deleteProductByIdAsAdmin(productId: number): Observable<void> {
+    // Endpoint: DELETE /api/admin/product/{id} (Auth Gerekli)
+    const url = `${this.apiUrl}/admin/product/${productId}`;
+    return this.httpClient.delete<void>(url).pipe(catchError(this.handleError));
+  }
+
+  // --- HELPER Methods ---
+
+  private mapProductDates(product: Product): Product {
+    return {
+      ...product,
+      created_at: product.created_at ? new Date(product.created_at) : undefined,
+    };
+  }
+
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage = 'An unknown error occurred!';
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = `Client-side error: ${error.error.message}`;
     } else {
-      console.error(`[ADMIN] Product ${productId} not found for update.`);
-      return of(null).pipe(delay(400));
+      errorMessage = `Backend returned code ${error.status}. `;
+      if (error.error?.message) {
+        errorMessage += `Message: ${error.error.message}`;
+      } else if (error.error?.error) {
+        errorMessage += `Error: ${error.error.error}`;
+      } else if (typeof error.error === 'string') {
+        errorMessage += `Details: ${error.error}`;
+      } else {
+        errorMessage += `Full error: ${error.message}`;
+      }
     }
+    console.error('API Error in ProductService:', errorMessage, error);
+    return throwError(() => new Error(errorMessage));
   }
 }
