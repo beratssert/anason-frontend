@@ -103,7 +103,7 @@ export class ProductService {
     reviewData: AddReviewPayload
   ): Observable<Review> {
     // Varsayım: Backend endpoint -> POST /api/products/{productId}/reviews (Auth Gerekli)
-    const url = `${this.apiUrl}/reviews/product/${productId}`;
+    const url = `${this.apiUrl}/reviews/create/${productId}`;
     return this.httpClient.post<Review>(url, reviewData).pipe(
       map((r) => ({ ...r, created_at: new Date(r.created_at) })),
       catchError(this.handleError)
@@ -112,7 +112,7 @@ export class ProductService {
 
   getFilterOptions(): Observable<ProductFilterOptions> {
     // Varsayım: Backend endpoint -> GET /api/products/filters
-    const url = `${this.apiUrl}/products/filters`;
+    const url = `${this.apiUrl}/products/filter`;
     const defaultOptions: ProductFilterOptions = {
       categories: [],
       priceRange: { min: 0, max: 1000 },
