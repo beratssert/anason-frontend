@@ -186,7 +186,13 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   addToCart(product: Product): void {
-    this.cartService.addItem(product, 1);
+    if (!product || !product.id) {
+      // ID kontrolü eklendi
+      this.toastr.error('Cannot add item: Invalid product data.', 'Error');
+      return;
+    }
+    // CartService.addItem artık productId ve quantity bekliyor
+    this.cartService.addItem(product.id, 1); // product yerine product.id gönderildi
     this.toastr.success(`${product.name} added to cart!`, 'Success');
   }
 

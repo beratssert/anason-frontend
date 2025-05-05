@@ -31,7 +31,7 @@
               <a [routerLink]="['/products', item.productId]">
                 <img
                   [src]="item.imageUrl || 'assets/images/placeholder.png'"
-                  [alt]="item.name"
+                  [alt]="item.productName"
                   class="w-full h-full object-contain"
                 />
               </a>
@@ -44,9 +44,9 @@
                 <a
                   [routerLink]="['/products', item.productId]"
                   class="font-semibold text-gray-800 hover:text-orange-600 mb-1 block text-sm sm:text-base leading-tight"
-                  [title]="item.name"
+                  [title]="item.productName"
                 >
-                  {{ item.name }}
+                  {{ item.productName }}
                 </a>
                 <p class="text-xs sm:text-sm text-gray-500">
                   Unit Price: ${{ item.price | number : "1.2-2" }}

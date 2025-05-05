@@ -80,8 +80,8 @@ export class ProductService {
   }
 
   getReviewsByProductId(productId: number): Observable<Review[]> {
-    // Varsayım: Backend endpoint -> GET /api/products/{productId}/reviews
-    const url = `${this.apiUrl}/products/${productId}/reviews`;
+    // Varsayım: Backend endpoint -> GET /api/reviews/product/{productId}
+    const url = `${this.apiUrl}/reviews/product/${productId}`;
     return this.httpClient.get<Review[]>(url).pipe(
       map((reviews) =>
         reviews.map((r) => ({ ...r, created_at: new Date(r.created_at) }))
@@ -103,7 +103,7 @@ export class ProductService {
     reviewData: AddReviewPayload
   ): Observable<Review> {
     // Varsayım: Backend endpoint -> POST /api/products/{productId}/reviews (Auth Gerekli)
-    const url = `${this.apiUrl}/products/${productId}/reviews`;
+    const url = `${this.apiUrl}/reviews/product/${productId}`;
     return this.httpClient.post<Review>(url, reviewData).pipe(
       map((r) => ({ ...r, created_at: new Date(r.created_at) })),
       catchError(this.handleError)

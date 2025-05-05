@@ -17,18 +17,18 @@
             <img
               class="h-full w-full object-contain"
               [src]="item.imageUrl || 'assets/images/placeholder.png'"
-              [alt]="item.name"
+              [alt]="item.productName"
             />
           </div>
           <div class="min-w-0 flex-1">
             <p
               class="text-sm font-medium text-gray-900 truncate"
-              [title]="item.name"
+              [title]="item.productName"
             >
               <a
                 [routerLink]="['/products', item.productId]"
                 class="hover:text-orange-600"
-                >{{ item.name }}</a
+                >{{ item.productName }}</a
               >
             </p>
             <p class="text-sm text-gray-500">Qty: {{ item.quantity }}</p>

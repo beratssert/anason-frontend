@@ -176,7 +176,7 @@ export class ProductDetailComponent implements OnInit {
       this.product.stock_quantity >= this.quantity &&
       this.quantity > 0
     ) {
-      this.cartService.addItem(this.product, this.quantity);
+      this.cartService.addItem(this.product.id, this.quantity);
       this.toastr.success(
         `${this.quantity} x ${this.product.name} added to cart!`,
         'Added to Cart'
